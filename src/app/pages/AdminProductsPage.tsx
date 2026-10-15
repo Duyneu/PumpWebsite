@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import {
   Plus,
   Search,
@@ -58,7 +57,6 @@ interface Product {
 
 export function AdminProductsPage() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,15 +66,8 @@ export function AdminProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'admin')) {
-      navigate('/');
-      return;
-    }
-
-    if (user && user.role === 'admin') {
-      fetchProducts();
-    }
-  }, [user, loading, navigate]);
+    fetchProducts();
+  }, []);
 
   useEffect(() => {
     filterProducts();

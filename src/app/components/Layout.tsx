@@ -4,7 +4,6 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { ChatbotButton } from './ChatbotButton';
 import { PageTransition } from './PageTransition';
-import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { Product } from '../types';
 
@@ -14,12 +13,10 @@ const Chatbot = lazy(() => import('./Chatbot').then(m => ({ default: m.Chatbot }
 export function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isLoggedIn, logout } = useAuth();
   const { totalItems } = useCart();
   const [chatbotOpen, setChatbotOpen] = useState(false);
 
   const handleNavigate = (page: string) => {
-    // Map old page names to routes
     const routeMap: { [key: string]: string } = {
       'home': '/',
       'about': '/about',
@@ -31,16 +28,11 @@ export function Layout() {
     navigate(routeMap[page] || `/${page}`);
   };
 
-  const handleShowLogin = () => {
-    navigate('/login');
-  };
-
   const handleProductClick = (product: Product) => {
     navigate(`/products/${product.id}`, { state: { product } });
     setChatbotOpen(false);
   };
 
-  // Get current page from location
   const getCurrentPage = () => {
     const path = location.pathname;
     if (path === '/') return 'home';
@@ -57,9 +49,6 @@ export function Layout() {
         currentPage={getCurrentPage()}
         onNavigate={handleNavigate}
         cartItemCount={totalItems}
-        isLoggedIn={isLoggedIn}
-        onLogout={logout}
-        onShowLogin={handleShowLogin}
       />
 
       <main className="flex-1">

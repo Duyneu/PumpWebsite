@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Product } from '../types';
 import { ArrowLeft, ShoppingCart, Check, Truck, Shield, Phone, Edit } from 'lucide-react';
 import { ProductReviews } from './ProductReviews';
-import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 interface ProductDetailProps {
@@ -14,7 +13,6 @@ interface ProductDetailProps {
 export function ProductDetail({ product, onAddToCart, onBack }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   const formatPrice = (price: number) => {
@@ -41,18 +39,6 @@ export function ProductDetail({ product, onAddToCart, onBack }: ProductDetailPro
             <ArrowLeft className="w-5 h-5" />
             Quay lại danh sách sản phẩm
           </button>
-
-          {/* Admin Edit Button - Top Right */}
-          {user && user.role === 'admin' && (
-            <button
-              onClick={() => navigate(`/admin/products/edit/${product.id}`)}
-              className="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2 shadow-lg"
-            >
-              <Edit className="w-4 h-4" />
-              <span className="hidden sm:inline">Chỉnh sửa sản phẩm</span>
-              <span className="sm:hidden">Chỉnh sửa</span>
-            </button>
-          )}
         </div>
 
         <div className="grid md:grid-cols-2 gap-12">

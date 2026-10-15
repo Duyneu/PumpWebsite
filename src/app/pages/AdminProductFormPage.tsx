@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { ArrowLeft, Save, X } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -20,7 +19,6 @@ import { toast } from 'sonner';
 export function AdminProductFormPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
   const isEdit = !!id;
 
   const [formData, setFormData] = useState({
@@ -56,15 +54,10 @@ export function AdminProductFormPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'admin')) {
-      navigate('/');
-      return;
-    }
-
-    if (isEdit && user && user.role === 'admin') {
+    if (isEdit) {
       fetchProduct();
     }
-  }, [id, user, loading, navigate]);
+  }, [id, isEdit]);
 
   const fetchProduct = async () => {
     try {
