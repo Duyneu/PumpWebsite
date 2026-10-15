@@ -1,0 +1,1 @@
+import{u as e,d as c,j as i}from"./vendor-C3-tQSI9.js";import{P as n}from"./ProductGrid-Dbl-Vg0R.js";import"./products-DeUPoqaw.js";import"./vendor-icons-CWh_bPXI.js";function g(){const a=e(),[r]=c(),o=r.get("category"),s=t=>{a(`/products/${t.id}`,{state:{product:t}})};return i.jsx(n,{onProductClick:s,initialCategory:o})}export{g as ProductsPage};
