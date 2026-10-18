@@ -39,7 +39,7 @@ export function Header({ currentPage, onNavigate, cartItemCount }: HeaderProps) 
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 text-cyan-400 font-semibold">
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-              VOLTOR & DONGYIN
+              VOLTOR
             </span>
             <span className="text-slate-400">|</span>
             <span className="flex items-center gap-1.5">
