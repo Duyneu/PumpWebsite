@@ -1,9 +1,11 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product } from '../types';
 
 export interface CartItem extends Product {
   quantity: number;
 }
+
+const CART_STORAGE_KEY = 'voltor_cart_items';
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -17,7 +19,27 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    try {
+      const stored = localStorage.getItem(CART_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.error('Failed to load cart from localStorage', e);
+    }
+    return [];
+  });
+
+  // Persist cart to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+    } catch (e) {
+      console.error('Failed to save cart to localStorage', e);
+    }
+  }, [cartItems]);
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 

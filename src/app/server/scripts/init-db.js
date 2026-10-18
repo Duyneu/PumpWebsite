@@ -29,6 +29,30 @@ const seedPath = path.join(__dirname, '../../database/seed-postgres.sql');
 
 async function initDatabase() {
   console.log('🔄 Initializing PostgreSQL database for VOLTOR...');
+
+  // Auto-create database if not exists
+  if (!poolConfig.connectionString) {
+    const adminConfig = { ...poolConfig, database: 'postgres' };
+    const adminPool = new Pool(adminConfig);
+    try {
+      const adminClient = await adminPool.connect();
+      const checkRes = await adminClient.query(
+        "SELECT 1 FROM pg_database WHERE datname = $1",
+        [poolConfig.database]
+      );
+      if (checkRes.rows.length === 0) {
+        console.log(`📦 Database "${poolConfig.database}" does not exist. Creating it now...`);
+        await adminClient.query(`CREATE DATABASE ${poolConfig.database}`);
+        console.log(`✅ Database "${poolConfig.database}" created successfully!`);
+      }
+      adminClient.release();
+    } catch (e) {
+      console.warn('⚠️  Could not auto-create database (might already exist):', e.message);
+    } finally {
+      await adminPool.end();
+    }
+  }
+
   console.log(`📡 Connecting to: ${poolConfig.connectionString || `${poolConfig.host}:${poolConfig.port}/${poolConfig.database}`}`);
 
   const pool = new Pool(poolConfig);
