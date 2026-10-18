@@ -179,14 +179,14 @@ export function ProductGrid({ onProductClick, limit, initialCategory }: ProductG
               {isLimitedView && (
                 <div className="text-center mt-12 space-y-4">
                   <p className="text-gray-600">
-                    Hiển thị <strong>{displayProducts.length}</strong> sản phẩm nổi bật trong tổng số <strong>{products.length}</strong> sản phẩm
+                    Hiển thị <strong>{displayProducts.length}</strong> sản phẩm nổi bật trong tổng số <strong>{allProducts.length}</strong> sản phẩm
                   </p>
                   <div>
                     <Link
                       to="/products"
                       className="inline-flex items-center justify-center bg-blue-600 text-white font-medium px-8 py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-sm hover:shadow"
                     >
-                      Xem tất cả {products.length} sản phẩm →
+                      Xem tất cả {allProducts.length} sản phẩm →
                     </Link>
                   </div>
                 </div>
