@@ -71,25 +71,39 @@ export function ProductDetail({ product, onAddToCart, onBack }: ProductDetailPro
             </p>
 
             {/* Specifications */}
-            <div className="bg-gray-50 rounded-lg p-6 mb-8">
-              <div className="mb-4">Thông số kỹ thuật</div>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Công suất:</span>
-                  <span>{product.specs.power}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Lưu lượng:</span>
-                  <span>{product.specs.flow}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Cột áp:</span>
-                  <span>{product.specs.head}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Chất liệu:</span>
-                  <span>{product.specs.material}</span>
-                </div>
+            <div className="bg-gray-50 rounded-xl p-6 mb-8 border border-gray-100">
+              <div className="font-bold text-gray-900 mb-4 text-base">Thông số kỹ thuật</div>
+              <div className="space-y-3 text-sm">
+                {product.specs?.power && (
+                  <div className="flex justify-between border-b border-gray-100 pb-2">
+                    <span className="text-gray-500">Công suất:</span>
+                    <span className="font-semibold text-gray-900">{product.specs.power}</span>
+                  </div>
+                )}
+                {product.specs?.flow && (
+                  <div className="flex justify-between border-b border-gray-100 pb-2">
+                    <span className="text-gray-500">Lưu lượng nước:</span>
+                    <span className="font-semibold text-gray-900">{product.specs.flow}</span>
+                  </div>
+                )}
+                {product.specs?.head && (
+                  <div className="flex justify-between border-b border-gray-100 pb-2">
+                    <span className="text-gray-500">Cột áp:</span>
+                    <span className="font-semibold text-gray-900">{product.specs.head}</span>
+                  </div>
+                )}
+                {product.specs?.material && (
+                  <div className="flex justify-between border-b border-gray-100 pb-2">
+                    <span className="text-gray-500">Ống xả / Chất liệu:</span>
+                    <span className="font-semibold text-gray-900">{product.specs.material}</span>
+                  </div>
+                )}
+                {product.customSpecs?.map((cs, idx) => (
+                  <div key={idx} className="flex justify-between border-b border-gray-100 pb-2">
+                    <span className="text-gray-500">{cs.name}:</span>
+                    <span className="font-semibold text-gray-900">{cs.value}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
