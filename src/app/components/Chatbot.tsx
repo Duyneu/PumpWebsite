@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, User } from 'lucide-react';
+import { X, Send, Bot, User, Sparkles } from 'lucide-react';
 import { products } from '../data/products';
 import { Product } from '../types';
+import { askGemini } from '../services/geminiChatService';
 
 interface Message {
   id: string;
@@ -21,16 +22,15 @@ export function Chatbot({ onClose, onProductClick }: ChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Xin chào! 👋 Tôi là trợ lý AI của Máy Bơm Việt.\n\nTôi có thể giúp bạn tìm kiếm và tư vấn sản phẩm phù hợp nhất:\n -Máy bơm nước\n -Động cơ điện\n -Ắc quy ô tô\n -Dụng cụ vệ sinh\n -Điện công nghiệp\n -Công cụ & dụng cụ\n -Phụ tùng máy công trình\n\nBạn cần tìm loại sản phẩm nào?',
+      text: 'Xin chào! 👋 Tôi là trợ lý AI thông minh của VOLTOR (Máy Bơm Việt), được hỗ trợ bởi Google Gemini AI.\n\nTôi có thể giải đáp chi tiết thông số kỹ thuật, tính toán lưu lượng, cột áp và tư vấn sản phẩm chính xác nhất cho bạn:\n• Máy bơm nước gia đình, tăng áp, chìm giếng khoan\n• Động cơ điện 1 pha & 3 pha\n• Ắc quy xe hơi, máy rửa xe cao áp\n• Thiết bị điện công nghiệp & phụ tùng máy\n\nBạn đang cần tìm sản phẩm hoặc cần giải pháp cho nguồn nước của mình?',
       sender: 'bot',
       timestamp: new Date(),
       quickActions: [
-        { label: '🏠 Máy bơm', value: 'Máy bơm nước' },
-        { label: '⚡ Động cơ điện', value: 'Động cơ điện' },
-        { label: '🔋 Ắc quy ô tô', value: 'Ắc quy ô tô' },
-        { label: '🧹 Dụng cụ vệ sinh', value: 'Dụng cụ vệ sinh' },
-        { label: '🔌 Điện công nghiệp', value: 'Điện công nghiệp' },
-        { label: '🔧 Công cụ', value: 'Công cụ dụng cụ' },
+        { label: '🏠 Bơm tăng áp gia đình', value: 'Tư vấn máy bơm tăng áp gia đình' },
+        { label: '💧 Bơm giếng khoan sâu', value: 'Tư vấn máy bơm chìm giếng khoan' },
+        { label: '⚡ Động cơ điện', value: 'Tư vấn động cơ điện' },
+        { label: '🚗 Máy rửa xe cao áp', value: 'Tư vấn máy rửa xe' },
+        { label: '📞 Hotline kỹ thuật', value: 'Cho tôi số hotline tư vấn kỹ thuật trực tiếp' },
       ],
     },
   ]);
@@ -623,7 +623,7 @@ export function Chatbot({ onClose, onProductClick }: ChatbotProps) {
     }
   };
 
-  const handleSend = (message?: string) => {
+  const handleSend = async (message?: string) => {
     const messageToSend = message || inputValue;
     if (!messageToSend.trim()) return;
 
@@ -638,8 +638,30 @@ export function Chatbot({ onClose, onProductClick }: ChatbotProps) {
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate AI thinking time
-    setTimeout(() => {
+    try {
+      // Build conversation history for multi-turn chat (excluding welcome message)
+      const history = messages
+        .filter(m => m.id !== '1')
+        .map(m => ({
+          role: (m.sender === 'user' ? 'user' : 'model') as 'user' | 'model',
+          text: m.text,
+        }));
+
+      const geminiRes = await askGemini(history, messageToSend, products);
+
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: geminiRes.text,
+        sender: 'bot',
+        timestamp: new Date(),
+        suggestedProducts: geminiRes.suggestedProducts.length > 0 ? geminiRes.suggestedProducts : undefined,
+        quickActions: geminiRes.quickActions,
+      };
+
+      setMessages(prev => [...prev, botMessage]);
+    } catch (error) {
+      console.warn('Gemini chat error, falling back to local engine:', error);
+      // Fallback seamlessly to existing local rules engine
       const response = generateResponse(messageToSend);
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -651,8 +673,9 @@ export function Chatbot({ onClose, onProductClick }: ChatbotProps) {
       };
 
       setMessages(prev => [...prev, botMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -681,17 +704,28 @@ export function Chatbot({ onClose, onProductClick }: ChatbotProps) {
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-t-2xl md:rounded-t-2xl flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-            <Bot className="w-6 h-6" />
+          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center relative">
+            <Bot className="w-6 h-6 text-white" />
+            <Sparkles className="w-3.5 h-3.5 text-yellow-300 absolute -top-0.5 -right-0.5" />
           </div>
           <div>
-            <div>Trợ lý AI</div>
-            <div className="text-xs text-blue-100">Tư vấn máy bơm</div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-white">Trợ lý AI VOLTOR</span>
+              <span className="text-[10px] bg-white/20 text-blue-50 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5 text-yellow-300" />
+                Gemini AI
+              </span>
+            </div>
+            <div className="text-xs text-blue-100 flex items-center gap-1.5 mt-0.5">
+              <span className="w-2 h-2 bg-green-400 rounded-full inline-block animate-pulse"></span>
+              <span>Kỹ thuật viên 24/7 • Hotline: 0898 296 336</span>
+            </div>
           </div>
         </div>
         <button
           onClick={onClose}
           className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          title="Đóng chat"
         >
           <X className="w-5 h-5" />
         </button>
@@ -778,11 +812,12 @@ export function Chatbot({ onClose, onProductClick }: ChatbotProps) {
             <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
               <Bot className="w-5 h-5" />
             </div>
-            <div className="bg-gray-100 rounded-2xl px-4 py-3">
+            <div className="bg-gray-100 rounded-2xl px-4 py-3 flex items-center gap-2">
+              <span className="text-xs text-gray-500 font-medium">Gemini AI đang soạn câu trả lời...</span>
               <div className="flex gap-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
