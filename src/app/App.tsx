@@ -16,6 +16,8 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ 
 const AdminProductsPage = lazy(() => import('./pages/AdminProductsPage').then(m => ({ default: m.AdminProductsPage })));
 const AdminProductFormPage = lazy(() => import('./pages/AdminProductFormPage').then(m => ({ default: m.AdminProductFormPage })));
 
+import { AdminGuard } from './components/AdminGuard';
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -33,11 +35,11 @@ export default function App() {
               <Route path="terms" element={<TermsPage />} />
             </Route>
 
-            {/* Admin Management Routes */}
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/products" element={<AdminProductsPage />} />
-            <Route path="/admin/products/new" element={<AdminProductFormPage />} />
-            <Route path="/admin/products/edit/:id" element={<AdminProductFormPage />} />
+            {/* Admin Management Routes - Password Protected */}
+            <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+            <Route path="/admin/products" element={<AdminGuard><AdminProductsPage /></AdminGuard>} />
+            <Route path="/admin/products/new" element={<AdminGuard><AdminProductFormPage /></AdminGuard>} />
+            <Route path="/admin/products/edit/:id" element={<AdminGuard><AdminProductFormPage /></AdminGuard>} />
 
             {/* 404 - Redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />

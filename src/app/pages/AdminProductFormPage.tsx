@@ -10,7 +10,9 @@ import {
   Zap, 
   DollarSign, 
   Layers, 
-  FileText 
+  FileText,
+  Upload,
+  FolderOpen
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -19,6 +21,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Switch } from '../components/ui/switch';
 import { toast } from 'sonner';
 import { products, mainCategories } from '../data/products';
+import { addAuditLog } from '../utils/auditLog';
 
 export function AdminProductFormPage() {
   const { id } = useParams<{ id: string }>();
@@ -160,9 +163,11 @@ export function AdminProductFormPage() {
       if (isEdit) {
         const updated = existing.map((p: any) => p.id === id ? newProduct : p);
         localStorage.setItem('custom_products', JSON.stringify(updated));
+        addAuditLog('UPDATE', `Chỉnh sửa sản phẩm: ${formData.name}`, `Giá: ${formData.price}đ | Danh mục: ${formData.category}`);
       } else {
         existing.unshift(newProduct);
         localStorage.setItem('custom_products', JSON.stringify(existing));
+        addAuditLog('CREATE', `Thêm sản phẩm mới: ${formData.name}`, `Giá: ${formData.price}đ | Danh mục: ${formData.category}`);
       }
 
       await new Promise(r => setTimeout(r, 600));
@@ -426,25 +431,96 @@ export function AdminProductFormPage() {
               Hình ảnh sản phẩm
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
+              {/* File upload drag & drop box */}
               <div>
-                <Label htmlFor="image" className="text-sm font-semibold text-gray-700">Đường dẫn ảnh (URL hoặc đường dẫn nội bộ)</Label>
-                <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="Ví dụ: /dongyin-images/sd_pump_4sdm.jpg hoặc link web https://..."
-                  className="mt-1.5"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  Mẹo: Bạn có thể chọn các ảnh catalog có sẵn: <code className="bg-gray-100 px-1 py-0.5 rounded text-blue-600">/dongyin-images/sd_pump_4sdm.jpg</code>, <code className="bg-gray-100 px-1 py-0.5 rounded text-blue-600">/dongyin-images/ws_pump.jpg</code>, <code className="bg-gray-100 px-1 py-0.5 rounded text-blue-600">/dongyin-images/cpm_cp_pump.jpg</code>
-                </p>
+                <Label className="text-sm font-semibold text-gray-700 block mb-2">
+                  Tải ảnh từ máy tính (Không cần URL)
+                </Label>
+                <div className="border-2 border-dashed border-gray-300 hover:border-blue-500 rounded-2xl p-6 text-center bg-gray-50/50 hover:bg-blue-50/30 transition-all cursor-pointer relative group">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > 5 * 1024 * 1024) {
+                          toast.error('Kích thước ảnh tối đa là 5MB!');
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const base64 = event.target?.result as string;
+                          setFormData(prev => ({ ...prev, image: base64 }));
+                          toast.success('Đã tải ảnh lên thành công!');
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  />
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                      <Upload className="w-6 h-6" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-700">
+                      Bấm vào đây để chọn ảnh từ máy tính hoặc kéo thả ảnh vào
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">Hỗ trợ JPG, PNG, WEBP tối đa 5MB</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hoặc nhập URL / Catalog */}
+              <div>
+                <Label htmlFor="image" className="text-xs font-semibold text-gray-500 uppercase">
+                  Hoặc chọn nhanh ảnh catalog có sẵn / dán link URL
+                </Label>
+                <div className="flex gap-2 mt-1.5">
+                  <Input
+                    id="image"
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    placeholder="/dongyin-images/... hoặc link web"
+                    className="text-xs"
+                  />
+                  {formData.image && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                      className="text-xs text-red-500 hover:bg-red-50"
+                    >
+                      Xóa ảnh
+                    </Button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  <span className="text-xs text-gray-400 self-center">Chọn nhanh:</span>
+                  {[
+                    ['Hỏa tiễn', '/dongyin-images/sd_pump_4sdm.jpg'],
+                    ['Bơm chìm WS', '/dongyin-images/ws_pump.jpg'],
+                    ['Cánh cắt WQ', '/dongyin-images/wq_pump.jpg'],
+                    ['Trục ngang CP', '/dongyin-images/cpm_cp_pump.jpg'],
+                    ['Tủ điện TD', '/dongyin-images/td_box.jpg']
+                  ].map(([label, path]) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, image: path }))}
+                      className="text-xs bg-gray-100 hover:bg-blue-100 hover:text-blue-700 text-gray-600 px-2 py-1 rounded transition-colors"
+                    >
+                      + {label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Preview Box */}
               {formData.image && (
-                <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-4">
-                  <div className="w-20 h-20 bg-white rounded-lg border overflow-hidden flex-shrink-0">
+                <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl flex items-center gap-4">
+                  <div className="w-20 h-20 bg-white rounded-lg border overflow-hidden flex-shrink-0 shadow-sm">
                     <img
                       src={formData.image}
                       alt="Xem trước ảnh"
@@ -452,11 +528,13 @@ export function AdminProductFormPage() {
                       onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/80?text=Loi+Anh'; }}
                     />
                   </div>
-                  <div>
-                    <div className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-                      <CheckCircle2 className="w-4 h-4" /> Đã nhận diện hình ảnh
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                      <CheckCircle2 className="w-4 h-4" /> Hình ảnh đã sẵn sàng lưu cùng sản phẩm
                     </div>
-                    <p className="text-xs text-gray-500 mt-1 truncate max-w-md">{formData.image}</p>
+                    <p className="text-xs text-gray-500 mt-1 truncate max-w-sm">
+                      {formData.image.startsWith('data:') ? 'Ảnh trực tiếp tải từ máy tính (Base64)' : formData.image}
+                    </p>
                   </div>
                 </div>
               )}

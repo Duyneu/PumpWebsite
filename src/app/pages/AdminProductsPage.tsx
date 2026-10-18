@@ -41,6 +41,7 @@ import {
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
 import { products as initialProducts } from '../data/products';
+import { addAuditLog } from '../utils/auditLog';
 
 interface Product {
   id: string | number;
@@ -153,6 +154,15 @@ export function AdminProductsPage() {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setProducts(products.filter((p) => p.id !== productToDelete.id));
+      
+      // Remove from localStorage if custom
+      try {
+        const stored = JSON.parse(localStorage.getItem('custom_products') || '[]');
+        const filtered = stored.filter((p: any) => p.id !== productToDelete.id);
+        localStorage.setItem('custom_products', JSON.stringify(filtered));
+      } catch (e) {}
+
+      addAuditLog('DELETE', `Xóa sản phẩm: ${productToDelete.name}`, `SKU: ${productToDelete.sku} | Giá: ${productToDelete.price}đ`);
       toast.success(`Đã xóa sản phẩm "${productToDelete.name}"`);
       setDeleteDialogOpen(false);
       setProductToDelete(null);
