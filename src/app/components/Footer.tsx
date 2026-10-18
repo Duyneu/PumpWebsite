@@ -191,8 +191,11 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="border-t border-gray-800 mt-8 pt-8 text-sm text-center">
+          <div className="border-t border-gray-800 mt-8 pt-8 text-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-gray-500">
             <p>© 2025 VOLTOR. Tất cả quyền được bảo lưu.</p>
+            <a href="/admin" className="hover:text-blue-400 text-xs transition-colors">
+              Quản trị (Admin)
+            </a>
           </div>
         </div>
       </footer>
