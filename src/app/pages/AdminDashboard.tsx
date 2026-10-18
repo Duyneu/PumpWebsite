@@ -2,67 +2,66 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Package, 
-  Users, 
-  ShoppingCart, 
-  TrendingUp,
-  Plus,
-  Settings,
-  BarChart3,
-  AlertCircle
+  Plus, 
+  ExternalLink,
+  Layers,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Alert, AlertDescription } from '../components/ui/alert';
+import { products, mainCategories } from '../data/products';
 
 export function AdminDashboard() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState({
-    totalProducts: 100,
-    totalUsers: 245,
-    totalOrders: 89,
-    revenue: 125000000
-  });
+
+  // Load custom products from localStorage if any
+  const [totalCustom, setTotalCustom] = useState(0);
 
   useEffect(() => {
-    fetchAdminStats();
+    try {
+      const stored = localStorage.getItem('custom_products');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setTotalCustom(Array.isArray(parsed) ? parsed.length : 0);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }, []);
 
-  const fetchAdminStats = async () => {
-    try {
-      setStats({
-        totalProducts: 100,
-        totalUsers: 245,
-        totalOrders: 89,
-        revenue: 125000000
-      });
-    } catch (error) {
-      console.error('Error fetching admin stats:', error);
-    }
-  };
+  const totalProductsCount = products.length + totalCustom;
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+      <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl">Admin Dashboard</h1>
-              <p className="text-gray-600 mt-1">Quản lý hệ thống VOLTOR</p>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                  Trung tâm quản trị
+                </span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">Quản Trị VOLTOR</h1>
+              <p className="text-gray-500 text-sm mt-0.5">Quản lý trực tiếp danh mục & sản phẩm trên website</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex items-center gap-3">
               <Button
                 variant="outline"
-                onClick={() => navigate('/')}
+                onClick={() => window.open('/', '_blank')}
+                className="gap-2"
               >
-                <Settings className="w-4 h-4 mr-2" />
-                Cài đặt
+                <ExternalLink className="w-4 h-4" />
+                Xem web ngoài
               </Button>
               <Button
                 onClick={() => navigate('/admin/products/new')}
+                className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Thêm sản phẩm
+                <Plus className="w-4 h-4" />
+                Thêm sản phẩm mới
               </Button>
             </div>
           </div>
@@ -70,172 +69,105 @@ export function AdminDashboard() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Alert */}
-        <Alert className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Chào mừng <strong>Quản trị viên</strong> đến Admin Dashboard. 
-            Bạn có toàn quyền quản lý sản phẩm, đơn hàng và người dùng.
-          </AlertDescription>
-        </Alert>
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card className="border-blue-100 bg-gradient-to-br from-white to-blue-50/50 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                Tổng sản phẩm
+              <CardTitle className="text-sm font-semibold text-blue-900">
+                Tổng sản phẩm đang bán
               </CardTitle>
-              <Package className="w-4 h-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalProducts}</div>
-              <p className="text-xs text-gray-500 mt-1">
-                +12 sản phẩm mới
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                Người dùng
-              </CardTitle>
-              <Users className="w-4 h-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalUsers}</div>
-              <p className="text-xs text-gray-500 mt-1">
-                +23 người dùng mới
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                Đơn hàng
-              </CardTitle>
-              <ShoppingCart className="w-4 h-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalOrders}</div>
-              <p className="text-xs text-gray-500 mt-1">
-                +5 đơn hàng mới
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                Doanh thu
-              </CardTitle>
-              <TrendingUp className="w-4 h-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats.revenue.toLocaleString('vi-VN')} đ
+              <div className="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center text-blue-600">
+                <Package className="w-5 h-5" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-extrabold text-blue-950">{totalProductsCount}</div>
               <p className="text-xs text-gray-500 mt-1">
-                +15% so với tháng trước
+                Bao gồm máy bơm hỏa tiễn, chìm, trục ngang & phụ kiện
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-indigo-100 bg-gradient-to-br from-white to-indigo-50/50 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-semibold text-indigo-900">
+                Nhóm ngành & Danh mục
+              </CardTitle>
+              <div className="w-10 h-10 rounded-xl bg-indigo-600/10 flex items-center justify-center text-indigo-600">
+                <Layers className="w-5 h-5" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-extrabold text-indigo-950">{mainCategories.length}</div>
+              <p className="text-xs text-gray-500 mt-1">
+                Các danh mục lớn phân loại kỹ thuật
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-emerald-100 bg-gradient-to-br from-white to-emerald-50/50 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-semibold text-emerald-900">
+                Trạng thái hệ thống
+              </CardTitle>
+              <div className="w-10 h-10 rounded-xl bg-emerald-600/10 flex items-center justify-center text-emerald-600">
+                <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-emerald-700 mt-1">Hoạt động bình thường</div>
+              <p className="text-xs text-gray-500 mt-1">
+                Cập nhật tức thời lên giao diện người dùng
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/products')}>
-            <CardHeader>
-              <Package className="w-8 h-8 text-blue-600 mb-2" />
-              <CardTitle>Quản lý sản phẩm</CardTitle>
-              <CardDescription>
-                Thêm, sửa, xóa sản phẩm. Quản lý giá cả, kho hàng, danh mục.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full">
-                Xem tất cả sản phẩm
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Primary Action Card */}
+        <div>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Chức năng quản lý</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div 
+              onClick={() => navigate('/admin/products')}
+              className="bg-white p-6 rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all cursor-pointer group flex flex-col justify-between"
+            >
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Package className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  Danh sách & Điều chỉnh sản phẩm
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed mb-6">
+                  Xem toàn bộ 143+ sản phẩm trong kho. Tìm kiếm theo tên, SKU hoặc lọc theo từng loại máy bơm để chỉnh sửa giá, thông số kỹ thuật hoặc xóa bỏ.
+                </p>
+              </div>
+              <div className="flex items-center text-sm font-semibold text-blue-600 group-hover:translate-x-1 transition-transform">
+                Vào trang quản lý sản phẩm <ArrowRight className="w-4 h-4 ml-1.5" />
+              </div>
+            </div>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/orders')}>
-            <CardHeader>
-              <ShoppingCart className="w-8 h-8 text-green-600 mb-2" />
-              <CardTitle>Quản lý đơn hàng</CardTitle>
-              <CardDescription>
-                Xem, xử lý đơn hàng. Cập nhật trạng thái giao hàng.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full">
-                Xem đơn hàng
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/users')}>
-            <CardHeader>
-              <Users className="w-8 h-8 text-purple-600 mb-2" />
-              <CardTitle>Quản lý người dùng</CardTitle>
-              <CardDescription>
-                Xem danh sách người dùng, phân quyền, quản lý tài khoản.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full">
-                Xem người dùng
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/categories')}>
-            <CardHeader>
-              <BarChart3 className="w-8 h-8 text-orange-600 mb-2" />
-              <CardTitle>Danh mục sản phẩm</CardTitle>
-              <CardDescription>
-                Quản lý danh mục, phân loại sản phẩm 3 cấp.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full">
-                Quản lý danh mục
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/analytics')}>
-            <CardHeader>
-              <TrendingUp className="w-8 h-8 text-blue-600 mb-2" />
-              <CardTitle>Báo cáo & Thống kê</CardTitle>
-              <CardDescription>
-                Xem báo cáo doanh thu, sản phẩm bán chạy, xu hướng.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full">
-                Xem báo cáo
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/reviews')}>
-            <CardHeader>
-              <Settings className="w-8 h-8 text-gray-600 mb-2" />
-              <CardTitle>Quản lý đánh giá</CardTitle>
-              <CardDescription>
-                Duyệt, ẩn/hiện đánh giá sản phẩm từ khách hàng.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full">
-                Xem đánh giá
-              </Button>
-            </CardContent>
-          </Card>
+            <div 
+              onClick={() => navigate('/admin/products/new')}
+              className="bg-white p-6 rounded-2xl border border-gray-200 hover:border-emerald-500 hover:shadow-lg transition-all cursor-pointer group flex flex-col justify-between"
+            >
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Plus className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors">
+                  Thêm sản phẩm mới vào web
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed mb-6">
+                  Đăng sản phẩm mới lên website với biểu mẫu tối ưu trực quan: tự động tạo đường dẫn slug, xem trước ảnh ngay khi nhập, điền công suất, lưu lượng, cột áp.
+                </p>
+              </div>
+              <div className="flex items-center text-sm font-semibold text-emerald-600 group-hover:translate-x-1 transition-transform">
+                Mở biểu mẫu thêm sản phẩm <ArrowRight className="w-4 h-4 ml-1.5" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

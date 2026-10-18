@@ -40,9 +40,10 @@ import {
 } from '../components/ui/alert-dialog';
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
+import { products as initialProducts } from '../data/products';
 
 interface Product {
-  id: number;
+  id: string | number;
   name: string;
   sku: string;
   price: number;
@@ -76,50 +77,45 @@ export function AdminProductsPage() {
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
-      // TODO: Replace with real API call
-      const mockProducts: Product[] = [
-        {
-          id: 1,
-          name: 'Máy bơm chìm nước thải VOLTOR WSD9-8-0.37E',
-          sku: 'WSD9-8-0.37E',
-          price: 1550000,
-          stock: 30,
-          category: 'Máy Bơm Chìm',
+      // Load custom products from localStorage
+      let customList: any[] = [];
+      try {
+        const stored = localStorage.getItem('custom_products');
+        if (stored) customList = JSON.parse(stored);
+      } catch (e) {}
+
+      // Map initial products
+      const realProducts: Product[] = [
+        ...customList.map(c => ({
+          id: c.id,
+          name: c.name,
+          sku: String(c.id),
+          price: c.price || 0,
+          stock: c.inStock ? 25 : 0,
+          category: c.category || 'Máy bơm',
           brand: 'VOLTOR',
           is_featured: false,
           is_bestseller: false,
           is_new: true,
-          image: 'https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=800'
-        },
-        {
-          id: 2,
-          name: 'Máy bơm chìm hóa tiến DONGYIN 2SDM-0.7/32',
-          sku: '2SDM-0.7/32',
-          price: 2000000,
-          stock: 15,
-          category: 'Máy Bơm Chìm',
-          brand: 'DONGYIN',
+          image: c.image || '/dongyin-images/sd_pump_4sdm.jpg',
+        })),
+        ...initialProducts.map(p => ({
+          id: p.id,
+          name: p.name,
+          sku: String(p.id),
+          price: p.price,
+          stock: p.inStock ? 20 : 0,
+          category: p.category,
+          brand: p.name.includes('DONGYIN') ? 'DONGYIN' : 'VOLTOR',
           is_featured: false,
           is_bestseller: false,
-          is_new: true,
-          image: 'figma:asset/58e358fd89af2fe881e55e4ecdebcb54e2ef425c.png'
-        },
-        {
-          id: 3,
-          name: 'Tủ điện bơm nước VOLTOR 2.0TD-0.50HP',
-          sku: '2.0TD-0.50HP',
-          price: 190000,
-          stock: 50,
-          category: 'Điện Công Nghiệp',
-          brand: 'VOLTOR',
-          is_featured: true,
-          is_bestseller: true,
           is_new: false,
-          image: 'figma:asset/10d62a1b66fbeef6e4488d6b3639891e271b7d31.png'
-        }
+          image: p.image,
+        }))
       ];
-      setProducts(mockProducts);
-      setFilteredProducts(mockProducts);
+
+      setProducts(realProducts);
+      setFilteredProducts(realProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Không thể tải danh sách sản phẩm');
