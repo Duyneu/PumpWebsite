@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { products, mainCategories } from '../data/products';
+import { mainCategories } from '../data/products';
 import { getEffectiveProducts } from '../utils/productStorage';
 import { getAuditLogs, clearAuditLogs, AuditLogItem } from '../utils/auditLog';
 import { AdminAccountModal } from '../components/AdminAccountModal';
@@ -253,7 +253,7 @@ export function AdminDashboard() {
                   Danh sách & Điều chỉnh sản phẩm
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                  Xem toàn bộ 143+ sản phẩm trong kho. Tìm kiếm theo tên, SKU hoặc lọc theo từng loại máy bơm để chỉnh sửa giá, thông số kỹ thuật hoặc xóa bỏ.
+                  Xem toàn bộ {totalProductsCount} sản phẩm đang bán. Tìm kiếm theo tên, SKU hoặc lọc theo từng loại máy bơm để chỉnh sửa giá, thông số kỹ thuật hoặc xóa bỏ.
                 </p>
               </div>
               <div className="flex items-center text-sm font-semibold text-blue-600 group-hover:translate-x-1 transition-transform">
