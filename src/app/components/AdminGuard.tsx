@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Mail, KeyRound, ArrowRight, ShieldCheck, User } from 'lucide-react';
+import { Lock, Mail, KeyRound, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { verifyAdminLogin, getCurrentAdmin, setCurrentAdmin, AdminAccount } from '../utils/adminAuth';
@@ -14,6 +14,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
   });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
@@ -59,7 +60,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
               <div className="relative">
                 <Input
                   type="email"
-                  placeholder="huuduy0811@gmail.com"
+                  placeholder="Nhập email quản trị..."
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -77,17 +78,25 @@ export function AdminGuard({ children }: AdminGuardProps) {
               <label className="text-xs font-semibold text-gray-700 block mb-1">Mật khẩu</label>
               <div className="relative">
                 <Input
-                  type="password"
-                  placeholder="••••••••"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Nhập mật khẩu quản trị..."
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
                     if (error) setError('');
                   }}
-                  className="pl-10 py-2.5 text-sm"
+                  className="pl-10 pr-10 py-2.5 text-sm"
                   required
                 />
                 <KeyRound className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-gray-400 hover:text-gray-600 absolute right-3 top-1/2 -translate-y-1/2 p-1"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
