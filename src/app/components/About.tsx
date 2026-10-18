@@ -361,15 +361,15 @@ export function About() {
                 href="tel:+84836389488"
                 className="bg-white text-blue-600 px-8 py-3 rounded-full hover:bg-gray-100 transition-colors inline-block"
               >
-                Gọi ngay: (+84) 898 296 336
+                Gọi ngay: (+84) 836 389 488
               </a>
               <a
-                href="https://zalo.me/84898296336"
+                href="https://zalo.me/0836389488"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="border-2 border-white px-8 py-3 rounded-full hover:bg-white hover:text-blue-600 transition-colors inline-block"
               >
-                Chat Zalo
+                Chat Zalo: 0836 389 488
               </a>
             </div>
           </motion.div>

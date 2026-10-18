@@ -143,14 +143,25 @@ export function ProductDetail({ product, onAddToCart, onBack }: ProductDetailPro
               </button>
             </div>
 
-            {/* Contact */}
-            <a
-              href="tel:0123456789"
-              className="w-full border-2 border-blue-600 text-blue-600 py-3 px-6 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
-            >
-              <Phone className="w-5 h-5" />
-              Gọi tư vấn: 0836 389 488
-            </a>
+            {/* Contact & Zalo */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <a
+                href="tel:+84836389488"
+                className="w-full border-2 border-blue-600 text-blue-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 font-medium text-sm"
+              >
+                <Phone className="w-4 h-4" />
+                Gọi: 0836 389 488
+              </a>
+              <a
+                href="https://zalo.me/0836389488"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-[#0068FF] text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium text-sm shadow-sm"
+              >
+                <span className="font-bold text-xs bg-white text-[#0068FF] px-1.5 py-0.5 rounded">Zalo</span>
+                Chat Zalo tư vấn
+              </a>
+            </div>
 
             {/* Features */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
