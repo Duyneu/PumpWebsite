@@ -19,6 +19,8 @@ export interface Review {
   productId: string;
   userId: string;
   userName: string;
+  userPhone?: string;
+  userEmail?: string;
   rating: number;
   comment: string;
   createdAt: string;
@@ -129,6 +131,18 @@ class Database {
         createdAt: '2025-12-17T13:20:00.000Z',
       },
     ];
+
+    try {
+      const stored = localStorage.getItem('voltor_reviews');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.reviews = parsed;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   // ==================== USERS ====================
@@ -189,7 +203,12 @@ class Database {
       ...review,
       createdAt: new Date().toISOString(),
     };
-    this.reviews.push(newReview);
+    this.reviews.unshift(newReview);
+    try {
+      localStorage.setItem('voltor_reviews', JSON.stringify(this.reviews));
+    } catch (e) {
+      // ignore
+    }
     console.log('[DB] Review created for product:', review.productId);
     return newReview;
   }
@@ -199,6 +218,11 @@ class Database {
     if (index === -1) return false;
     
     this.reviews.splice(index, 1);
+    try {
+      localStorage.setItem('voltor_reviews', JSON.stringify(this.reviews));
+    } catch (e) {
+      // ignore
+    }
     console.log('[DB] Review deleted:', id);
     return true;
   }
