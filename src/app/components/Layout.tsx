@@ -6,6 +6,7 @@ import { ChatbotButton } from './ChatbotButton';
 import { PageTransition } from './PageTransition';
 import { useCart } from '../contexts/CartContext';
 import { Product } from '../types';
+import { Toaster } from 'sonner';
 
 // Lazy load heavy Chatbot component on demand
 const Chatbot = lazy(() => import('./Chatbot').then(m => ({ default: m.Chatbot })));
@@ -58,6 +59,9 @@ export function Layout() {
       </main>
 
       <Footer />
+
+      {/* Toast Notification Provider */}
+      <Toaster position="top-right" richColors />
 
       {/* Chatbot Button */}
       <ChatbotButton
