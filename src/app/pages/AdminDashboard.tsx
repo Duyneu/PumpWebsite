@@ -9,14 +9,31 @@ import {
   History,
   Trash2,
   ShieldCheck,
-  UserCheck
+  ShoppingBag,
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  Search,
+  CheckCircle2,
+  AlertCircle,
+  Truck
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { products, mainCategories } from '../data/products';
 import { getAuditLogs, clearAuditLogs, AuditLogItem } from '../utils/auditLog';
 import { AdminAccountModal } from '../components/AdminAccountModal';
 import { getCurrentAdmin } from '../utils/adminAuth';
+import { 
+  getOrders, 
+  updateOrderStatus, 
+  deleteOrder, 
+  getStatusText, 
+  getStatusColor, 
+  Order, 
+  OrderStatus 
+} from '../utils/orders';
 
 export function AdminDashboard() {
   const navigate = useNavigate();
@@ -24,10 +41,13 @@ export function AdminDashboard() {
   // Load custom products from localStorage if any
   const [totalCustom, setTotalCustom] = useState(0);
   const [logs, setLogs] = useState<AuditLogItem[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [orderSearch, setOrderSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const currentAdmin = getCurrentAdmin();
 
-  useEffect(() => {
+  const reloadData = () => {
     try {
       const stored = localStorage.getItem('custom_products');
       if (stored) {
@@ -35,15 +55,52 @@ export function AdminDashboard() {
         setTotalCustom(Array.isArray(parsed) ? parsed.length : 0);
       }
       setLogs(getAuditLogs());
+      setOrders(getOrders());
     } catch (e) {
       console.error(e);
     }
+  };
+
+  useEffect(() => {
+    reloadData();
   }, []);
 
   const totalProductsCount = products.length + totalCustom;
+  const pendingOrdersCount = orders.filter(o => o.status === 'pending').length;
+
+  const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
+    updateOrderStatus(orderId, newStatus);
+    reloadData();
+  };
+
+  const handleDeleteOrder = (orderId: string, customerName: string) => {
+    if (confirm(`Bạn có chắc muốn xóa đơn hàng #${orderId} của khách hàng "${customerName}" không?`)) {
+      deleteOrder(orderId);
+      reloadData();
+    }
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(price);
+  };
+
+  const filteredOrders = orders.filter((o) => {
+    const matchesStatus = statusFilter === 'all' || o.status === statusFilter;
+    const query = orderSearch.trim().toLowerCase();
+    const matchesSearch = !query || 
+      o.id.toLowerCase().includes(query) ||
+      o.customerName.toLowerCase().includes(query) ||
+      o.phone.toLowerCase().includes(query) ||
+      o.email.toLowerCase().includes(query) ||
+      o.address.toLowerCase().includes(query);
+    return matchesStatus && matchesSearch;
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-16">
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
@@ -54,9 +111,14 @@ export function AdminDashboard() {
                 <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
                   Trung tâm quản trị
                 </span>
+                {currentAdmin && (
+                  <span className="text-xs text-gray-500 font-medium">
+                    • Xin chào, <strong>{currentAdmin.name}</strong>
+                  </span>
+                )}
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">Quản Trị VOLTOR</h1>
-              <p className="text-gray-500 text-sm mt-0.5">Quản lý trực tiếp danh mục & sản phẩm trên website</p>
+              <p className="text-gray-500 text-sm mt-0.5">Quản lý trực tiếp danh mục, sản phẩm và đơn đặt hàng khách hàng</p>
             </div>
             <div className="flex flex-wrap items-center gap-2.5">
               <Button
@@ -89,8 +151,35 @@ export function AdminDashboard() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Card Orders */}
+          <Card className="border-amber-200 bg-gradient-to-br from-white to-amber-50/50 shadow-sm relative overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-semibold text-amber-900">
+                Đơn đặt hàng
+              </CardTitle>
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                <ShoppingBag className="w-5 h-5" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-baseline gap-2">
+                <div className="text-3xl font-extrabold text-amber-950">{orders.length}</div>
+                {pendingOrdersCount > 0 && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold border border-amber-300">
+                    {pendingOrdersCount} chờ xác nhận
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Khách đặt mua qua giỏ hàng trên web
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Card Products */}
           <Card className="border-blue-100 bg-gradient-to-br from-white to-blue-50/50 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-semibold text-blue-900">
@@ -103,11 +192,12 @@ export function AdminDashboard() {
             <CardContent>
               <div className="text-3xl font-extrabold text-blue-950">{totalProductsCount}</div>
               <p className="text-xs text-gray-500 mt-1">
-                Bao gồm máy bơm hỏa tiễn, chìm, trục ngang & phụ kiện
+                Bao gồm máy bơm hỏa tiễn, chìm, trục ngang
               </p>
             </CardContent>
           </Card>
 
+          {/* Card Categories */}
           <Card className="border-indigo-100 bg-gradient-to-br from-white to-indigo-50/50 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-semibold text-indigo-900">
@@ -125,6 +215,7 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
 
+          {/* Card Status */}
           <Card className="border-emerald-100 bg-gradient-to-br from-white to-emerald-50/50 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-semibold text-emerald-900">
@@ -137,7 +228,7 @@ export function AdminDashboard() {
             <CardContent>
               <div className="text-xl font-bold text-emerald-700 mt-1">Hoạt động bình thường</div>
               <p className="text-xs text-gray-500 mt-1">
-                Cập nhật tức thời lên giao diện người dùng
+                Đồng bộ trực tiếp trên client & Vercel
               </p>
             </CardContent>
           </Card>
@@ -179,7 +270,7 @@ export function AdminDashboard() {
                   Thêm sản phẩm mới vào web
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                  Đăng sản phẩm mới lên website với biểu mẫu tối ưu trực quan: tự động tạo đường dẫn slug, xem trước ảnh ngay khi nhập, điền công suất, lưu lượng, cột áp.
+                  Đăng sản phẩm mới lên website với biểu mẫu tối ưu trực quan: tự động tạo đường dẫn slug, tải ảnh trực tiếp không cần URL, điền công suất, lưu lượng, cột áp.
                 </p>
               </div>
               <div className="flex items-center text-sm font-semibold text-emerald-600 group-hover:translate-x-1 transition-transform">
@@ -187,6 +278,231 @@ export function AdminDashboard() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Customer Orders Management Section */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-gray-100 gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center flex-shrink-0">
+                <ShoppingBag className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-bold text-gray-900">Danh Sách Đơn Đặt Hàng Của Khách Hàng</h3>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-semibold">
+                    {orders.length} đơn
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Tự động ghi nhận khi khách hàng điền thông tin và bấm đặt hàng trên website
+                </p>
+              </div>
+            </div>
+
+            {/* Quick status filters */}
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { key: 'all', label: 'Tất cả' },
+                { key: 'pending', label: 'Chờ xác nhận' },
+                { key: 'confirmed', label: 'Đã xác nhận' },
+                { key: 'shipping', label: 'Đang giao' },
+                { key: 'completed', label: 'Hoàn thành' },
+                { key: 'cancelled', label: 'Đã hủy' },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setStatusFilter(tab.key)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    statusFilter === tab.key
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {tab.label}
+                  {tab.key === 'pending' && pendingOrdersCount > 0 && (
+                    <span className="ml-1.5 px-1.5 py-0.2 bg-amber-400 text-amber-950 rounded-full text-[10px]">
+                      {pendingOrdersCount}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={orderSearch}
+                onChange={(e) => setOrderSearch(e.target.value)}
+                placeholder="Tìm kiếm theo mã đơn (#VLT-...), tên khách, số điện thoại, email hoặc địa chỉ giao hàng..."
+                className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Orders Cards List */}
+          {filteredOrders.length === 0 ? (
+            <div className="text-center py-12 text-gray-400 border border-dashed rounded-xl bg-gray-50/50">
+              <ShoppingBag className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p className="text-base font-semibold text-gray-700">Chưa có đơn đặt hàng nào</p>
+              <p className="text-xs mt-1 text-gray-500 max-w-md mx-auto">
+                Khi khách hàng chọn sản phẩm vào giỏ hàng, điền thông tin và bấm <strong>"Tiến hành đặt hàng"</strong>, đơn hàng sẽ lập tức hiển thị tại đây.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredOrders.map((order) => {
+                const statusStyle = getStatusColor(order.status);
+                return (
+                  <div
+                    key={order.id}
+                    className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow bg-white"
+                  >
+                    {/* Order Item Header */}
+                    <div className="bg-gray-50/80 px-4 sm:px-6 py-3 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <span className="text-sm font-bold text-gray-900 bg-white px-2.5 py-1 rounded-md border border-gray-200 font-mono shadow-2xs">
+                          #{order.id}
+                        </span>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>{order.createdAt}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {/* Status selector */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-gray-500 font-medium">Trạng thái:</span>
+                          <select
+                            value={order.status}
+                            onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
+                            className={`text-xs font-semibold px-2.5 py-1 rounded-lg border cursor-pointer outline-none ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
+                          >
+                            <option value="pending">Chờ xác nhận</option>
+                            <option value="confirmed">Đã xác nhận</option>
+                            <option value="shipping">Đang giao hàng</option>
+                            <option value="completed">Đã hoàn thành</option>
+                            <option value="cancelled">Đã hủy đơn</option>
+                          </select>
+                        </div>
+
+                        {/* Delete button */}
+                        <button
+                          onClick={() => handleDeleteOrder(order.id, order.customerName)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Xóa đơn hàng"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Order Details Body */}
+                    <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+                      
+                      {/* Customer Info (5 cols) */}
+                      <div className="lg:col-span-5 space-y-2.5 text-sm border-b lg:border-b-0 lg:border-r border-gray-100 pb-4 lg:pb-0 lg:pr-4">
+                        <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">
+                          Thông tin người nhận
+                        </div>
+
+                        <div className="font-bold text-gray-900 text-base">
+                          {order.customerName}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-gray-700">
+                          <Phone className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                          <a
+                            href={`tel:${order.phone}`}
+                            className="font-semibold text-blue-600 hover:underline"
+                          >
+                            {order.phone}
+                          </a>
+                          <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-medium border border-emerald-200">
+                            Gọi ngay
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-gray-600 text-xs">
+                          <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <a href={`mailto:${order.email}`} className="hover:text-blue-600 hover:underline">
+                            {order.email}
+                          </a>
+                        </div>
+
+                        <div className="flex items-start gap-2 text-gray-600 text-xs">
+                          <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                          <span>{order.address}</span>
+                        </div>
+
+                        {order.notes && (
+                          <div className="bg-amber-50/70 border border-amber-200/80 rounded-lg p-2.5 text-xs text-amber-900 mt-2">
+                            <strong>Ghi chú:</strong> {order.notes}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Products List & Total (7 cols) */}
+                      <div className="lg:col-span-7 flex flex-col justify-between">
+                        <div>
+                          <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+                            Sản phẩm đã đặt ({order.items.reduce((s, it) => s + it.quantity, 0)})
+                          </div>
+
+                          <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                            {order.items.map((it, idx) => (
+                              <div
+                                key={idx}
+                                className="flex items-center justify-between text-xs p-2 rounded-lg bg-gray-50 border border-gray-100"
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                                  {it.image && (
+                                    <img
+                                      src={it.image}
+                                      alt={it.name}
+                                      className="w-9 h-9 object-cover rounded border bg-white flex-shrink-0"
+                                      onError={(e) => {
+                                        (e.target as HTMLElement).style.display = 'none';
+                                      }}
+                                    />
+                                  )}
+                                  <div className="min-w-0">
+                                    <p className="font-semibold text-gray-900 truncate">{it.name}</p>
+                                    <p className="text-gray-500">
+                                      {formatPrice(it.price)} × <span className="font-bold text-gray-800">{it.quantity}</span>
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="font-bold text-gray-900 flex-shrink-0">
+                                  {formatPrice(it.price * it.quantity)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Order Pricing Summary */}
+                        <div className="pt-3 border-t border-gray-100 mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                          <div className="text-gray-500">
+                            Tạm tính: <strong className="text-gray-800">{formatPrice(order.subtotal)}</strong> | Phí VC: {order.shipping === 0 ? 'Miễn phí' : formatPrice(order.shipping)}
+                          </div>
+                          <div className="text-sm font-bold text-gray-900">
+                            Tổng thanh toán: <span className="text-blue-600 text-base">{formatPrice(order.total)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Audit Log Section */}
@@ -198,7 +514,7 @@ export function AdminDashboard() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Nhật ký thay đổi (Audit Log)</h3>
-                <p className="text-xs text-gray-500">Ghi lại toàn bộ hành động thêm, sửa, xóa sản phẩm</p>
+                <p className="text-xs text-gray-500">Ghi lại toàn bộ hành động thêm sản phẩm, xóa và đặt đơn hàng</p>
               </div>
             </div>
             {logs.length > 0 && (
@@ -220,7 +536,7 @@ export function AdminDashboard() {
             <div className="text-center py-8 text-gray-400">
               <History className="w-10 h-10 mx-auto mb-2 text-gray-300" />
               <p className="text-sm">Chưa có lịch sử thay đổi nào được ghi lại.</p>
-              <p className="text-xs mt-1 text-gray-400">Khi bạn thêm, chỉnh sửa hoặc xóa sản phẩm, thông tin sẽ được lưu tự động tại đây.</p>
+              <p className="text-xs mt-1 text-gray-400">Khi có đơn hàng mới hoặc sản phẩm được điều chỉnh, thông tin sẽ được lưu tự động tại đây.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -231,7 +547,7 @@ export function AdminDashboard() {
                   'bg-red-50 text-red-700 border-red-200';
 
                 const label = 
-                  log.action === 'CREATE' ? 'Thêm mới' :
+                  log.action === 'CREATE' ? 'Thêm mới / Đơn hàng' :
                   log.action === 'UPDATE' ? 'Chỉnh sửa' :
                   'Đã xóa';
 

@@ -1,14 +1,19 @@
+import { useState } from 'react';
 import { CartItem } from '../contexts/CartContext';
 import { Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
+import { CheckoutModal } from './CheckoutModal';
+import { Order } from '../utils/orders';
 
 interface CartProps {
   items: CartItem[];
   onUpdateQuantity: (productId: string, quantity: number) => void;
   onRemove: (productId: string) => void;
   onContinueShopping: () => void;
+  onClearCart?: () => void;
 }
 
-export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping }: CartProps) {
+export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping, onClearCart }: CartProps) {
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
@@ -122,7 +127,10 @@ export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping }: 
               <span className="text-blue-600">{formatPrice(total)}</span>
             </div>
 
-            <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors mb-3">
+            <button
+              onClick={() => setIsCheckoutOpen(true)}
+              className="w-full bg-blue-600 text-white font-medium py-3 rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg transition-all mb-3 flex items-center justify-center gap-2"
+            >
               Tiến hành đặt hàng
             </button>
             <button
@@ -140,6 +148,19 @@ export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping }: 
           </div>
         </div>
       </div>
+
+      {/* Checkout Modal */}
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        items={items}
+        subtotal={subtotal}
+        shipping={shipping}
+        total={total}
+        onOrderSuccess={(_order: Order) => {
+          onClearCart?.();
+        }}
+      />
     </div>
   );
 }
