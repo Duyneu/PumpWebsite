@@ -75,7 +75,7 @@ export function AdminDashboard() {
         <Alert className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Chào mừng <strong>{user.name || user.email}</strong> đến Admin Dashboard. 
+            Chào mừng <strong>Quản trị viên</strong> đến Admin Dashboard. 
             Bạn có toàn quyền quản lý sản phẩm, đơn hàng và người dùng.
           </AlertDescription>
         </Alert>
