@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import * as motion from 'motion/react-client';
 import { 
   Target, 
@@ -18,6 +19,7 @@ import {
   Check
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getEffectiveProducts } from '../utils/productStorage';
 
 // Import local photos
 import teamMeetingImg from 'figma:asset/eef97558f9b042891acd67c365ea4fdcf41063d1.png';
@@ -26,6 +28,17 @@ import productImg from 'figma:asset/356ae43299b08c7237e653e31b12c9b0c6d54f2c.png
 
 export function About() {
   const navigate = useNavigate();
+  const [productCount, setProductCount] = useState(() => getEffectiveProducts().length);
+
+  useEffect(() => {
+    const handleProductsChange = () => {
+      setProductCount(getEffectiveProducts().length);
+    };
+    window.addEventListener('voltor_products_changed', handleProductsChange);
+    return () => {
+      window.removeEventListener('voltor_products_changed', handleProductsChange);
+    };
+  }, []);
 
   const values = [
     {
@@ -80,7 +93,7 @@ export function About() {
   const stats = [
     { number: '10+', label: 'Năm Kinh Nghiệm Chuyên Sâu' },
     { number: '10.000+', label: 'Khách Hàng & Đại Lý Tin Dùng' },
-    { number: '140+', label: 'Model Máy Bơm Sẵn Tại Kho' },
+    { number: `${productCount}`, label: 'Model Máy Bơm Đang Bán' },
     { number: '63', label: 'Tỉnh Thành Phân Phối Toàn Quốc' },
   ];
 
@@ -381,7 +394,7 @@ export function About() {
                   onClick={() => navigate('/products')}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-6 py-3 rounded-xl transition-all shadow-md inline-flex items-center gap-2"
                 >
-                  <span>Khám phá 140+ model sản phẩm</span>
+                  <span>Khám phá tất cả {productCount} sản phẩm</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>

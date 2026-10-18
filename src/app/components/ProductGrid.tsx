@@ -129,7 +129,7 @@ export function ProductGrid({ onProductClick, limit, initialCategory, initialSea
         <p className="text-slate-600 max-w-2xl mx-auto mt-2 text-sm sm:text-base">
           {isLimitedView 
             ? 'Khám phá các model máy bơm nước được các đại lý và nhà thầu tin dùng hàng đầu.' 
-            : 'Hơn 140+ model máy bơm hỏa tiễn, bơm chìm, ly tâm chính hãng sẵn hàng phục vụ quý khách.'}
+            : `Hiện có ${allProducts.length} sản phẩm máy bơm chính hãng đang bán, sẵn hàng phục vụ quý khách.`}
         </p>
       </div>
 

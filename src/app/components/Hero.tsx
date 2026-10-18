@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowRight, ShieldCheck, Truck, Headphones, Search, Sparkles, Phone, Droplets } from 'lucide-react';
 import * as motion from 'motion/react-client';
 import { useNavigate } from 'react-router-dom';
+import { getEffectiveProducts } from '../utils/productStorage';
 
 export type Page = 'home' | 'products' | 'about' | 'contact' | 'cart';
 
@@ -12,6 +13,17 @@ interface HeroProps {
 export function Hero({ onNavigate }: HeroProps) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [productCount, setProductCount] = useState(() => getEffectiveProducts().length);
+
+  useEffect(() => {
+    const handleProductsChange = () => {
+      setProductCount(getEffectiveProducts().length);
+    };
+    window.addEventListener('voltor_products_changed', handleProductsChange);
+    return () => {
+      window.removeEventListener('voltor_products_changed', handleProductsChange);
+    };
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,7 +148,7 @@ export function Hero({ onNavigate }: HeroProps) {
                 onClick={() => onNavigate('products')}
                 className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold px-7 py-3.5 rounded-xl transition-all transform hover:-translate-y-0.5 shadow-lg shadow-blue-500/25 inline-flex items-center gap-2"
               >
-                <span>Xem 140+ Sản Phẩm</span>
+                <span>Xem tất cả {productCount} sản phẩm</span>
                 <ArrowRight className="w-5 h-5" />
               </button>
 
@@ -225,8 +237,8 @@ export function Hero({ onNavigate }: HeroProps) {
         {/* 4 Stats Ticker Bar */}
         <div className="mt-16 pt-8 border-t border-slate-800/80 grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="text-center sm:text-left">
-            <div className="text-2xl sm:text-3xl font-black text-cyan-400">140+</div>
-            <p className="text-xs sm:text-sm text-slate-300 font-medium mt-0.5">Model máy bơm sẵn kho</p>
+            <div className="text-2xl sm:text-3xl font-black text-cyan-400">{productCount}</div>
+            <p className="text-xs sm:text-sm text-slate-300 font-medium mt-0.5">Sản phẩm đang bán</p>
           </div>
           <div className="text-center sm:text-left">
             <div className="text-2xl sm:text-3xl font-black text-cyan-400">100%</div>
