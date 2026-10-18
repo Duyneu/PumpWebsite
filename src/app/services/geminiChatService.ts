@@ -48,7 +48,7 @@ NGUYÊN TẮC TƯ VẤN:
 - Giọng điệu thân thiện, chuyên nghiệp, nhiệt tình như kỹ sư lâu năm của VOLTOR.
 - Tư vấn trúng đích: gợi ý ngay giải pháp, công suất hoặc model phù hợp.
 - Dùng gạch đầu dòng ngắn khi liệt kê ưu điểm hoặc lưu ý.
-- Nhắc khách liên hệ Hotline/Zalo 0898 296 336 khi cần tư vấn lắp đặt trực tiếp.
+- Khi nhắc đến Zalo hay Hotline: TUYỆT ĐỐI KHÔNG viết cú pháp [https://...](https://...) hay đường link https:// thô kệch. Chỉ cần viết tự nhiên: "Hotline / Zalo: 0898 296 336", giao diện web sẽ tự động tạo nút bấm Zalo đẹp mắt cho khách hàng.
 
 QUY TẮC ĐẶC BIỆT ĐỂ GỢI Ý SẢN PHẨM:
 - Cuối câu trả lời, nếu có sản phẩm phù hợp trong danh mục, hãy đính kèm cú pháp bí mật:
@@ -167,10 +167,12 @@ export async function askGemini(
         ];
       }
 
-      // Strip internal tags from user-facing text
-      const cleanText = rawText
+      // Strip internal tags from user-facing text and clean ugly raw URL markdown links
+      let cleanText = rawText
         .replace(/\[RECOMMEND:[^\]]+\]/gi, '')
         .replace(/\[QUICK:[^\]]+\]/gi, '')
+        .replace(/\[https?:\/\/[^\]]+\]\((https?:\/\/[^)]+)\)/gi, '$1')
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/gi, '$1 ($2)')
         .trim();
 
       return {
