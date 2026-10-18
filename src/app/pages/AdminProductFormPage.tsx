@@ -24,6 +24,7 @@ import { Switch } from '../components/ui/switch';
 import { toast } from 'sonner';
 import { products, mainCategories } from '../data/products';
 import { addAuditLog } from '../utils/auditLog';
+import { getProductById, saveProduct } from '../utils/productStorage';
 
 export function AdminProductFormPage() {
   const { id } = useParams<{ id: string }>();
@@ -68,9 +69,7 @@ export function AdminProductFormPage() {
 
   useEffect(() => {
     if (isEdit && id) {
-      // Tìm sản phẩm trong products hoặc custom_products
-      const customList = JSON.parse(localStorage.getItem('custom_products') || '[]');
-      const found = products.find(p => p.id === id) || customList.find((p: any) => p.id === id);
+      const found = getProductById(id);
       if (found) {
         setFormData({
           name: found.name || '',
@@ -184,14 +183,11 @@ export function AdminProductFormPage() {
         inStock: parseInt(formData.stock) > 0,
       };
 
-      const existing = JSON.parse(localStorage.getItem('custom_products') || '[]');
+      saveProduct(newProduct, Boolean(isEdit));
+
       if (isEdit) {
-        const updated = existing.map((p: any) => p.id === id ? newProduct : p);
-        localStorage.setItem('custom_products', JSON.stringify(updated));
         addAuditLog('UPDATE', `Chỉnh sửa sản phẩm: ${formData.name}`, `Giá: ${formData.price}đ | Danh mục: ${formData.category}`);
       } else {
-        existing.unshift(newProduct);
-        localStorage.setItem('custom_products', JSON.stringify(existing));
         addAuditLog('CREATE', `Thêm sản phẩm mới: ${formData.name}`, `Giá: ${formData.price}đ | Danh mục: ${formData.category}`);
       }
 

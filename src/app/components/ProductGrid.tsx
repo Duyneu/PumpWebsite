@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
 import * as motion from 'motion/react-client';
-import { products } from '../data/products';
 import { Product } from '../types';
 import { ShoppingCart } from 'lucide-react';
 import { CategorySidebar } from './CategorySidebar';
 import { useState, useEffect, useMemo } from 'react';
 import { mainCategories } from '../data/products';
 import { LazyImage } from './LazyImage';
+import { getEffectiveProducts } from '../utils/productStorage';
 
 interface ProductGridProps {
   onProductClick: (product: Product) => void;
@@ -16,6 +16,18 @@ interface ProductGridProps {
 
 export function ProductGrid({ onProductClick, limit, initialCategory }: ProductGridProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [allProducts, setAllProducts] = useState<Product[]>(() => getEffectiveProducts());
+
+  // Listen to product changes (adds, edits, deletes)
+  useEffect(() => {
+    const handleProductsChange = () => {
+      setAllProducts(getEffectiveProducts());
+    };
+    window.addEventListener('voltor_products_changed', handleProductsChange);
+    return () => {
+      window.removeEventListener('voltor_products_changed', handleProductsChange);
+    };
+  }, []);
   
   // Set initial category from URL param
   useEffect(() => {
@@ -31,11 +43,11 @@ export function ProductGrid({ onProductClick, limit, initialCategory }: ProductG
   // Filter products based on selected category with memoization
   const displayProducts = useMemo(() => {
     if (!selectedCategory) {
-      return limit ? products.slice(0, limit) : products;
+      return limit ? allProducts.slice(0, limit) : allProducts;
     }
 
     const lowerCategory = selectedCategory.toLowerCase();
-    const filtered = products.filter(product => {
+    const filtered = allProducts.filter(product => {
       const lowerProductCategory = product.category.toLowerCase();
       const lowerProductName = product.name.toLowerCase();
       
@@ -46,8 +58,8 @@ export function ProductGrid({ onProductClick, limit, initialCategory }: ProductG
     });
 
     return limit ? filtered.slice(0, limit) : filtered;
-  }, [selectedCategory, limit]);
-  const isLimitedView = limit && limit < products.length;
+  }, [selectedCategory, limit, allProducts]);
+  const isLimitedView = Boolean(limit && limit < allProducts.length);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', {

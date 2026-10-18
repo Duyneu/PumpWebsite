@@ -40,8 +40,8 @@ import {
 } from '../components/ui/alert-dialog';
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
-import { products as initialProducts } from '../data/products';
 import { addAuditLog } from '../utils/auditLog';
+import { getEffectiveProducts, deleteProduct } from '../utils/productStorage';
 
 interface Product {
   id: string | number;
@@ -69,6 +69,14 @@ export function AdminProductsPage() {
 
   useEffect(() => {
     fetchProducts();
+
+    const handleStorageChange = () => {
+      fetchProducts();
+    };
+    window.addEventListener('voltor_products_changed', handleStorageChange);
+    return () => {
+      window.removeEventListener('voltor_products_changed', handleStorageChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -78,42 +86,21 @@ export function AdminProductsPage() {
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
-      // Load custom products from localStorage
-      let customList: any[] = [];
-      try {
-        const stored = localStorage.getItem('custom_products');
-        if (stored) customList = JSON.parse(stored);
-      } catch (e) {}
+      const allEffective = getEffectiveProducts();
 
-      // Map initial products
-      const realProducts: Product[] = [
-        ...customList.map(c => ({
-          id: c.id,
-          name: c.name,
-          sku: String(c.id),
-          price: c.price || 0,
-          stock: c.inStock ? 25 : 0,
-          category: c.category || 'Máy bơm',
-          brand: 'VOLTOR',
-          is_featured: false,
-          is_bestseller: false,
-          is_new: true,
-          image: c.image || '/dongyin-images/sd_pump_4sdm.jpg',
-        })),
-        ...initialProducts.map(p => ({
-          id: p.id,
-          name: p.name,
-          sku: String(p.id),
-          price: p.price,
-          stock: p.inStock ? 20 : 0,
-          category: p.category,
-          brand: p.name.includes('DONGYIN') ? 'DONGYIN' : 'VOLTOR',
-          is_featured: false,
-          is_bestseller: false,
-          is_new: false,
-          image: p.image,
-        }))
-      ];
+      const realProducts: Product[] = allEffective.map((p) => ({
+        id: p.id,
+        name: p.name,
+        sku: String(p.id),
+        price: p.price || 0,
+        stock: p.inStock ? 25 : 0,
+        category: p.category || 'Máy bơm',
+        brand: p.name.includes('DONGYIN') ? 'DONGYIN' : 'VOLTOR',
+        is_featured: false,
+        is_bestseller: false,
+        is_new: false,
+        image: p.image || '/dongyin-images/sd_pump_4sdm.jpg',
+      }));
 
       setProducts(realProducts);
       setFilteredProducts(realProducts);
@@ -150,20 +137,18 @@ export function AdminProductsPage() {
     if (!productToDelete) return;
 
     try {
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Permanently remove from product storage
+      deleteProduct(productToDelete.id);
 
-      setProducts(products.filter((p) => p.id !== productToDelete.id));
-      
-      // Remove from localStorage if custom
-      try {
-        const stored = JSON.parse(localStorage.getItem('custom_products') || '[]');
-        const filtered = stored.filter((p: any) => p.id !== productToDelete.id);
-        localStorage.setItem('custom_products', JSON.stringify(filtered));
-      } catch (e) {}
+      // Update local state
+      setProducts((prev) => prev.filter((p) => String(p.id) !== String(productToDelete.id)));
 
-      addAuditLog('DELETE', `Xóa sản phẩm: ${productToDelete.name}`, `SKU: ${productToDelete.sku} | Giá: ${productToDelete.price}đ`);
-      toast.success(`Đã xóa sản phẩm "${productToDelete.name}"`);
+      addAuditLog(
+        'DELETE',
+        `Xóa sản phẩm: ${productToDelete.name}`,
+        `SKU: ${productToDelete.sku} | Giá: ${productToDelete.price}đ`
+      );
+      toast.success(`Đã xóa vĩnh viễn sản phẩm "${productToDelete.name}"`);
       setDeleteDialogOpen(false);
       setProductToDelete(null);
     } catch (error) {

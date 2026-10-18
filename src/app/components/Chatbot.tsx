@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Bot, User, Sparkles, RotateCcw } from 'lucide-react';
 import { products } from '../data/products';
+import { getEffectiveProducts } from '../utils/productStorage';
 import { Product } from '../types';
 import { askGemini } from '../services/geminiChatService';
 
@@ -786,7 +787,8 @@ export function Chatbot({ onClose, onProductClick }: ChatbotProps) {
           text: m.text,
         }));
 
-      const geminiRes = await askGemini(history, messageToSend, products);
+      const availableProducts = getEffectiveProducts();
+      const geminiRes = await askGemini(history, messageToSend, availableProducts);
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),

@@ -1,7 +1,7 @@
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { ProductDetail } from '../components/ProductDetail';
 import { useCart } from '../contexts/CartContext';
-import { products } from '../data/products';
+import { getProductById } from '../utils/productStorage';
 
 export function ProductDetailPage() {
   const { productId } = useParams();
@@ -9,8 +9,8 @@ export function ProductDetailPage() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  // Try to get product from location state first, then from products data
-  const product = location.state?.product || products.find(p => p.id === productId);
+  // Try to get product from location state first, then from dynamic product storage
+  const product = location.state?.product || (productId ? getProductById(productId) : undefined);
 
   if (!product) {
     return (
