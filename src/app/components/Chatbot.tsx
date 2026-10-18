@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, User, Sparkles } from 'lucide-react';
+import { X, Send, Bot, User, Sparkles, RotateCcw } from 'lucide-react';
 import { products } from '../data/products';
 import { Product } from '../types';
 import { askGemini } from '../services/geminiChatService';
@@ -18,22 +18,79 @@ interface ChatbotProps {
   onProductClick: (product: Product) => void;
 }
 
+function FormattedMessage({ text, isUser }: { text: string; isUser: boolean }) {
+  const lines = text.split('\n');
+  return (
+    <div className="space-y-1.5 text-[13.5px] leading-relaxed">
+      {lines.map((line, idx) => {
+        if (!line.trim()) return <div key={idx} className="h-1" />;
+
+        // Parse bold **text**
+        const parts = line.split(/(\*\*[^*]+\*\*)/g);
+        const parsed = parts.map((part, pIdx) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return (
+              <strong
+                key={pIdx}
+                className={isUser ? 'font-semibold text-white' : 'font-semibold text-slate-900'}
+              >
+                {part.slice(2, -2)}
+              </strong>
+            );
+          }
+          return part;
+        });
+
+        if (
+          line.trim().startsWith('•') ||
+          line.trim().startsWith('- ') ||
+          line.trim().startsWith('* ')
+        ) {
+          const content = line.trim().replace(/^[•\-\*]\s*/, '');
+          const contentParts = content.split(/(\*\*[^*]+\*\*)/g).map((part, pIdx) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              return (
+                <strong
+                  key={pIdx}
+                  className={isUser ? 'font-semibold text-white' : 'font-semibold text-slate-900'}
+                >
+                  {part.slice(2, -2)}
+                </strong>
+              );
+            }
+            return part;
+          });
+
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-0.5">
+              <span className={isUser ? 'text-blue-200 mt-1' : 'text-blue-600 mt-1 font-bold'}>•</span>
+              <span className="flex-1">{contentParts}</span>
+            </div>
+          );
+        }
+
+        return <p key={idx}>{parsed}</p>;
+      })}
+    </div>
+  );
+}
+
+const INITIAL_MESSAGE: Message = {
+  id: '1',
+  text: 'Xin chào bạn! 👋 Tôi là trợ lý kỹ thuật AI của **VOLTOR**.\n\nTôi có thể giúp bạn tính toán cột áp, chọn máy bơm hoặc tìm kiếm sản phẩm phù hợp nhất.\n\nBạn đang quan tâm đến dòng sản phẩm nào?',
+  sender: 'bot',
+  timestamp: new Date(),
+  quickActions: [
+    { label: '🏠 Bơm tăng áp', value: 'Tư vấn máy bơm tăng áp gia đình' },
+    { label: '💧 Bơm giếng khoan', value: 'Tư vấn máy bơm chìm giếng khoan' },
+    { label: '⚡ Động cơ điện', value: 'Tư vấn động cơ điện' },
+    { label: '🚗 Máy rửa xe', value: 'Tư vấn máy rửa xe' },
+    { label: '📞 Hotline tư vấn', value: 'Cho tôi số hotline tư vấn kỹ thuật trực tiếp' },
+  ],
+};
+
 export function Chatbot({ onClose, onProductClick }: ChatbotProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Xin chào! 👋 Tôi là trợ lý AI thông minh của VOLTOR (Máy Bơm Việt), được hỗ trợ bởi Google Gemini AI.\n\nTôi có thể giải đáp chi tiết thông số kỹ thuật, tính toán lưu lượng, cột áp và tư vấn sản phẩm chính xác nhất cho bạn:\n• Máy bơm nước gia đình, tăng áp, chìm giếng khoan\n• Động cơ điện 1 pha & 3 pha\n• Ắc quy xe hơi, máy rửa xe cao áp\n• Thiết bị điện công nghiệp & phụ tùng máy\n\nBạn đang cần tìm sản phẩm hoặc cần giải pháp cho nguồn nước của mình?',
-      sender: 'bot',
-      timestamp: new Date(),
-      quickActions: [
-        { label: '🏠 Bơm tăng áp gia đình', value: 'Tư vấn máy bơm tăng áp gia đình' },
-        { label: '💧 Bơm giếng khoan sâu', value: 'Tư vấn máy bơm chìm giếng khoan' },
-        { label: '⚡ Động cơ điện', value: 'Tư vấn động cơ điện' },
-        { label: '🚗 Máy rửa xe cao áp', value: 'Tư vấn máy rửa xe' },
-        { label: '📞 Hotline kỹ thuật', value: 'Cho tôi số hotline tư vấn kỹ thuật trực tiếp' },
-      ],
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -692,86 +749,95 @@ export function Chatbot({ onClose, onProductClick }: ChatbotProps) {
     }).format(price);
   };
 
-  const quickQuestions = [
-    'Máy bơm cho gia đình',
-    'Máy bơm công nghiệp',
-    'Máy bơm giếng khoan',
-    'Máy bơm giá rẻ',
-  ];
+  const handleResetChat = () => {
+    setMessages([INITIAL_MESSAGE]);
+    setInputValue('');
+    setIsTyping(false);
+  };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-t-2xl md:rounded-2xl shadow-2xl">
+    <div className="flex flex-col h-full bg-white rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden font-sans">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-t-2xl md:rounded-t-2xl flex items-center justify-between">
+      <div className="bg-gradient-to-r from-blue-600 via-blue-650 to-blue-700 text-white px-4 py-3.5 flex items-center justify-between border-b border-blue-500/30">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center relative">
-            <Bot className="w-6 h-6 text-white" />
-            <Sparkles className="w-3.5 h-3.5 text-yellow-300 absolute -top-0.5 -right-0.5" />
+          <div className="w-10 h-10 bg-white/15 backdrop-blur-xs rounded-full flex items-center justify-center relative border border-white/20 shadow-xs">
+            <Bot className="w-5 h-5 text-white" />
+            <Sparkles className="w-3 h-3 text-amber-300 absolute -top-0.5 -right-0.5 animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-white">Trợ lý AI VOLTOR</span>
-              <span className="text-[10px] bg-white/20 text-blue-50 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-                <Sparkles className="w-2.5 h-2.5 text-yellow-300" />
+              <span className="font-semibold text-sm sm:text-base text-white tracking-tight">Trợ lý AI VOLTOR</span>
+              <span className="text-[10px] bg-white/20 text-blue-50 px-2 py-0.5 rounded-full font-medium flex items-center gap-1 border border-white/20">
+                <Sparkles className="w-2.5 h-2.5 text-amber-300" />
                 Gemini AI
               </span>
             </div>
-            <div className="text-xs text-blue-100 flex items-center gap-1.5 mt-0.5">
-              <span className="w-2 h-2 bg-green-400 rounded-full inline-block animate-pulse"></span>
-              <span>Kỹ thuật viên 24/7 • Hotline: 0898 296 336</span>
+            <div className="text-[11px] text-blue-100 flex items-center gap-1.5 mt-0.5">
+              <span className="w-2 h-2 bg-emerald-400 rounded-full inline-block animate-pulse"></span>
+              <span>Tư vấn kỹ thuật 24/7 • Hotline: 0898 296 336</span>
             </div>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-          title="Đóng chat"
-        >
-          <X className="w-5 h-5" />
-        </button>
+
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleResetChat}
+            className="p-2 hover:bg-white/15 rounded-lg transition-colors text-blue-100 hover:text-white"
+            title="Làm mới cuộc trò chuyện"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-white/15 rounded-lg transition-colors text-blue-100 hover:text-white"
+            title="Đóng chat"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 scroll-smooth">
         {messages.map((message) => (
-          <div key={message.id}>
+          <div key={message.id} className="space-y-2">
             <div
-              className={`flex gap-3 ${
+              className={`flex gap-2.5 ${
                 message.sender === 'user' ? 'flex-row-reverse' : ''
               }`}
             >
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs ${
                   message.sender === 'bot'
-                    ? 'bg-blue-100 text-blue-600'
-                    : 'bg-gray-200 text-gray-600'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-700 text-white'
                 }`}
               >
                 {message.sender === 'bot' ? (
-                  <Bot className="w-5 h-5" />
+                  <Bot className="w-4 h-4" />
                 ) : (
-                  <User className="w-5 h-5" />
+                  <User className="w-4 h-4" />
                 )}
               </div>
               <div
-                className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
+                className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 shadow-2xs ${
                   message.sender === 'bot'
-                    ? 'bg-gray-100 text-gray-800'
-                    : 'bg-blue-600 text-white'
+                    ? 'bg-white text-slate-800 rounded-tl-xs border border-slate-200/70'
+                    : 'bg-blue-600 text-white rounded-tr-xs'
                 }`}
               >
-                <p className="text-sm whitespace-pre-line">{message.text}</p>
+                <FormattedMessage text={message.text} isUser={message.sender === 'user'} />
               </div>
             </div>
 
             {/* Quick Action Buttons */}
             {message.quickActions && message.quickActions.length > 0 && (
-              <div className="ml-11 mt-3 flex flex-wrap gap-2">
+              <div className="ml-9 flex flex-wrap gap-1.5 pt-1">
                 {message.quickActions.map((action, index) => (
                   <button
                     key={index}
                     onClick={() => handleSend(action.value)}
-                    className="text-sm bg-white border border-blue-200 text-blue-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                    className="text-xs font-medium bg-white hover:bg-blue-600 text-slate-700 hover:text-white px-3 py-1.5 rounded-full border border-slate-200 hover:border-blue-600 transition-all shadow-2xs active:scale-95"
                   >
                     {action.label}
                   </button>
@@ -781,43 +847,52 @@ export function Chatbot({ onClose, onProductClick }: ChatbotProps) {
 
             {/* Suggested Products */}
             {message.suggestedProducts && message.suggestedProducts.length > 0 && (
-              <div className="ml-11 mt-3 space-y-2">
-                {message.suggestedProducts.map((product) => (
-                  <button
-                    key={product.id}
-                    onClick={() => onProductClick(product)}
-                    className="w-full bg-white border border-gray-200 rounded-lg p-3 hover:border-blue-500 hover:shadow-md transition-all text-left"
-                  >
-                    <div className="flex gap-3">
+              <div className="ml-9 mt-2 space-y-2">
+                <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  Sản phẩm gợi ý cho bạn:
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {message.suggestedProducts.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => onProductClick(product)}
+                      className="w-full bg-white border border-slate-200 hover:border-blue-500 rounded-xl p-2.5 hover:shadow-md transition-all text-left flex items-center gap-3 group"
+                    >
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-16 h-16 object-cover rounded"
+                        className="w-13 h-13 object-cover rounded-lg border border-slate-100 flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm mb-1 truncate">{product.name}</div>
-                        <div className="text-xs text-gray-500 mb-1">{product.category}</div>
-                        <div className="text-sm text-blue-600">{formatPrice(product.price)}</div>
+                        <div className="text-xs font-semibold text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                          {product.name}
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">{product.category}</div>
+                        <div className="text-xs font-bold text-blue-600 mt-0.5">{formatPrice(product.price)}</div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                      <div className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity pr-1 text-xs font-medium flex items-center gap-0.5">
+                        <span>Xem</span>
+                        <span>→</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
         ))}
 
         {isTyping && (
-          <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
-              <Bot className="w-5 h-5" />
+          <div className="flex gap-2.5 items-center">
+            <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-2xs">
+              <Bot className="w-4 h-4" />
             </div>
-            <div className="bg-gray-100 rounded-2xl px-4 py-3 flex items-center gap-2">
-              <span className="text-xs text-gray-500 font-medium">Gemini AI đang soạn câu trả lời...</span>
+            <div className="bg-white rounded-2xl rounded-tl-xs px-3.5 py-2 border border-slate-200/70 shadow-2xs flex items-center gap-2">
+              <span className="text-xs text-slate-500 font-medium">Gemini đang soạn câu trả lời...</span>
               <div className="flex gap-1">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -826,43 +901,31 @@ export function Chatbot({ onClose, onProductClick }: ChatbotProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick Questions */}
-      {messages.length <= 2 && (
-        <div className="px-4 pb-3">
-          <div className="text-xs text-gray-500 mb-2">Câu hỏi gợi ý:</div>
-          <div className="flex flex-wrap gap-2">
-            {quickQuestions.map((question) => (
-              <button
-                key={question}
-                onClick={() => handleSend(question)}
-                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full transition-colors"
-              >
-                {question}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Input */}
-      <div className="p-4 border-t">
-        <div className="flex gap-2">
+      <div className="p-3 bg-white border-t border-slate-200/80">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSend();
+          }}
+          className="flex items-center gap-2"
+        >
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Nhập câu hỏi của bạn..."
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Hỏi về máy bơm, công suất, số tầng..."
+            className="flex-1 px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-slate-800 placeholder-slate-400"
           />
           <button
-            onClick={() => handleSend()}
+            type="submit"
             disabled={!inputValue.trim()}
-            className="bg-blue-600 text-white p-2.5 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="bg-blue-600 text-white p-2.5 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs flex-shrink-0"
+            title="Gửi câu hỏi"
           >
-            <Send className="w-5 h-5" />
+            <Send className="w-4 h-4" />
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );

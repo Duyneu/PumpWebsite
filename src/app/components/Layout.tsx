@@ -68,8 +68,8 @@ export function Layout() {
       {/* Single Responsive Chatbot Instance */}
       {chatbotOpen && (
         <Suspense fallback={null}>
-          <div className="fixed inset-0 bg-black/50 z-50 md:bg-transparent md:inset-auto md:bottom-24 md:right-6 md:w-[500px] md:h-[700px]">
-            <div className="absolute inset-x-0 bottom-0 h-[85vh] md:relative md:inset-auto md:h-full">
+          <div className="fixed inset-0 bg-black/50 z-50 md:bg-transparent md:inset-auto md:bottom-24 md:right-6 md:w-[420px] md:h-[620px] md:max-h-[85vh]">
+            <div className="absolute inset-x-0 bottom-0 h-[85vh] md:relative md:inset-auto md:h-full shadow-2xl md:rounded-2xl overflow-hidden border border-gray-200/80">
               <Chatbot
                 onClose={() => setChatbotOpen(false)}
                 onProductClick={handleProductClick}
