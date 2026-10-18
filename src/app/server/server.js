@@ -1,6 +1,6 @@
 /**
  * VOLTOR Vietnam - Backend API Server
- * Express + MySQL
+ * Express + PostgreSQL
  */
 
 const express = require('express');

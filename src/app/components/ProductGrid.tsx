@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import * as motion from 'motion/react-client';
 import { products } from '../data/products';
 import { Product } from '../types';
 import { ShoppingCart } from 'lucide-react';
@@ -107,59 +109,74 @@ export function ProductGrid({ onProductClick, limit, initialCategory }: ProductG
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                {displayProducts.map((product) => (
-                  <div
+                {displayProducts.map((product, index) => (
+                  <motion.div
                     key={product.id}
-                    className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden group cursor-pointer"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-50px' }}
+                    transition={{ duration: 0.5, delay: (index % 6) * 0.08, ease: 'easeOut' }}
+                    whileHover={{ y: -6 }}
+                    className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer border border-gray-100 flex flex-col"
                     onClick={() => onProductClick(product)}
                   >
-                    <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+                    <div className="aspect-[4/3] overflow-hidden bg-gray-100 relative">
                       <LazyImage
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
                       />
                     </div>
-                    <div className="p-6">
-                      <div className="text-sm text-blue-600 mb-2">{product.category}</div>
-                      <h3 className="mb-2 group-hover:text-blue-600 transition-colors">
+                    <div className="p-6 flex-1 flex flex-col">
+                      <div className="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-2">{product.category}</div>
+                      <h3 className="mb-2 text-base font-semibold group-hover:text-blue-600 transition-colors line-clamp-2">
                         {product.name}
                       </h3>
                       <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                         {product.description}
                       </p>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="text-blue-600">{formatPrice(product.price)}</div>
-                        {product.inStock && (
-                          <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-                            Còn hàng
-                          </span>
-                        )}
+                      <div className="mt-auto">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="text-blue-600 font-bold text-lg">{formatPrice(product.price)}</div>
+                          {product.inStock && (
+                            <span className="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                              Còn hàng
+                            </span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                          <div><span className="text-gray-400">Công suất:</span> <span className="font-medium text-gray-700">{product.specs.power}</span></div>
+                          <div><span className="text-gray-400">Lưu lượng:</span> <span className="font-medium text-gray-700">{product.specs.flow}</span></div>
+                        </div>
+                        <button
+                          className="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onProductClick(product);
+                          }}
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Xem chi tiết
+                        </button>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4">
-                        <div>Công suất: {product.specs.power}</div>
-                        <div>Lưu lượng: {product.specs.flow}</div>
-                      </div>
-                      <button
-                        className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onProductClick(product);
-                        }}
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                        Xem chi tiết
-                      </button>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
 
               {isLimitedView && (
-                <div className="text-center mt-12">
-                  <p className="text-gray-600 mb-4">
-                    Hiển thị {displayProducts.length} trong tổng số {products.length} sản phẩm
+                <div className="text-center mt-12 space-y-4">
+                  <p className="text-gray-600">
+                    Hiển thị <strong>{displayProducts.length}</strong> sản phẩm nổi bật trong tổng số <strong>{products.length}</strong> sản phẩm
                   </p>
+                  <div>
+                    <Link
+                      to="/products"
+                      className="inline-flex items-center justify-center bg-blue-600 text-white font-medium px-8 py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-sm hover:shadow"
+                    >
+                      Xem tất cả {products.length} sản phẩm →
+                    </Link>
+                  </div>
                 </div>
               )}
             </>

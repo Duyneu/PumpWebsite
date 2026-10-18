@@ -1,53 +1,152 @@
 /**
- * MySQL Database Connection Pool
+ * PostgreSQL Database Connection Pool & Compatibility Layer
+ * VOLTOR Vietnam Backend
  */
 
-const mysql = require('mysql2');
-const util = require('util');
+const { Pool, types } = require('pg');
+require('dotenv').config();
 
-// Database configuration
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'voltor_db',
-  connectionLimit: 10,
-  waitForConnections: true,
-  queueLimit: 0,
-  timezone: '+07:00',
-  charset: 'utf8mb4',
-};
+// Parse INT8 (BIGINT / COUNT(*)) as standard JavaScript integer
+types.setTypeParser(types.builtins.INT8, (val) => (val === null ? null : parseInt(val, 10)));
+// Parse NUMERIC / DECIMAL as float for numeric arithmetic
+types.setTypeParser(types.builtins.NUMERIC, (val) => (val === null ? null : parseFloat(val)));
 
-// Create connection pool
-const pool = mysql.createPool(dbConfig);
+// Determine connection options
+const poolConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_URL.includes('sslmode=require') || process.env.DB_SSL === 'true'
+        ? { rejectUnauthorized: false }
+        : false,
+    }
+  : {
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432', 10),
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || 'postgres',
+      database: process.env.DB_NAME || 'voltor_db',
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+    };
 
-// Promisify for async/await
-const promisePool = pool.promise();
+// Create PostgreSQL connection pool
+const pool = new Pool(poolConfig);
 
-// Test connection
-pool.getConnection((err, connection) => {
+// Test pool connection asynchronously without crashing the server immediately
+pool.connect((err, client, release) => {
   if (err) {
-    console.error('❌ MySQL Connection Error:', err.message);
-    console.error('⚠️  Please check:');
-    console.error('   1. MySQL is running');
-    console.error('   2. Database "voltor_db" exists');
-    console.error('   3. User/password is correct');
-    process.exit(1);
+    console.error('⚠️  PostgreSQL Connection Notice:', err.message);
+    console.error('👉 Make sure PostgreSQL is running or configure DATABASE_URL in .env');
+    return;
   }
   
-  if (connection) {
-    console.log('✅ MySQL Connected Successfully!');
-    console.log(`📊 Database: ${dbConfig.database}`);
-    console.log(`🌐 Host: ${dbConfig.host}:${dbConfig.port}`);
-    connection.release();
+  console.log('✅ PostgreSQL Connected Successfully!');
+  if (process.env.DATABASE_URL) {
+    console.log(`📊 Connection: Using DATABASE_URL`);
+  } else {
+    console.log(`📊 Database: ${poolConfig.database}`);
+    console.log(`🌐 Host: ${poolConfig.host}:${poolConfig.port}`);
   }
+  release();
 });
 
-// Export both pool types
+/**
+ * Prepares and converts SQL and parameters from MySQL placeholder format (?)
+ * to PostgreSQL format ($1, $2, ...) and adds RETURNING id to INSERTs if missing.
+ */
+function prepareQuery(sql, params = []) {
+  const safeParams = (params || []).map((val) => (val === undefined ? null : val));
+  let paramIndex = 1;
+  let formattedSql = sql.replace(/\?/g, () => `$${paramIndex++}`);
+
+  // Convert MySQL boolean expressions (= 1 / = 0) on boolean columns
+  formattedSql = formattedSql.replace(
+    /\b(is_active|is_featured|is_bestseller|is_new|is_approved|is_verified_purchase)\s*=\s*1\b/gi,
+    '$1 = true'
+  );
+  formattedSql = formattedSql.replace(
+    /\b(is_active|is_featured|is_bestseller|is_new|is_approved|is_verified_purchase)\s*=\s*0\b/gi,
+    '$1 = false'
+  );
+
+  // Auto append RETURNING id for INSERT queries if not already present
+  const trimmed = formattedSql.trim();
+  if (/^insert\s+into/i.test(trimmed) && !/returning\s+/i.test(trimmed)) {
+    formattedSql = `${formattedSql} RETURNING id`;
+  }
+
+  return { formattedSql, safeParams };
+}
+
+/**
+ * Formats pg query result to be compatible with MySQL2 `[rows, resultHeader]` destructuring.
+ */
+function formatResult(res) {
+  const rows = res.rows || [];
+  const meta = {
+    insertId: rows.length > 0 && rows[0].id !== undefined ? rows[0].id : null,
+    affectedRows: res.rowCount,
+    rowCount: res.rowCount,
+    fields: res.fields,
+  };
+
+  const resultTuple = [rows, meta];
+  resultTuple.rows = rows;
+  resultTuple.rowCount = res.rowCount;
+  resultTuple.insertId = meta.insertId;
+  return resultTuple;
+}
+
+/**
+ * Main query function
+ */
+async function executeQuery(sql, params = []) {
+  const { formattedSql, safeParams } = prepareQuery(sql, params);
+  const res = await pool.query(formattedSql, safeParams);
+  return formatResult(res);
+}
+
+/**
+ * Transaction connection helper compatible with MySQL2 promisePool.getConnection()
+ */
+const promisePool = {
+  query: executeQuery,
+  execute: executeQuery,
+  getConnection: async () => {
+    const client = await pool.connect();
+    return {
+      client,
+      query: async (sql, params = []) => {
+        const { formattedSql, safeParams } = prepareQuery(sql, params);
+        const res = await client.query(formattedSql, safeParams);
+        return formatResult(res);
+      },
+      execute: async (sql, params = []) => {
+        const { formattedSql, safeParams } = prepareQuery(sql, params);
+        const res = await client.query(formattedSql, safeParams);
+        return formatResult(res);
+      },
+      beginTransaction: async () => {
+        await client.query('BEGIN');
+      },
+      commit: async () => {
+        await client.query('COMMIT');
+      },
+      rollback: async () => {
+        await client.query('ROLLBACK');
+      },
+      release: () => {
+        client.release();
+      },
+    };
+  },
+};
+
 module.exports = {
-  pool,           // For callback-style queries
-  promisePool,    // For async/await queries
-  query: promisePool.query.bind(promisePool),
-  execute: promisePool.execute.bind(promisePool),
+  pool,
+  promisePool,
+  query: executeQuery,
+  execute: executeQuery,
 };
