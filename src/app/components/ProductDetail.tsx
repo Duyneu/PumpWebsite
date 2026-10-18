@@ -146,14 +146,14 @@ export function ProductDetail({ product, onAddToCart, onBack }: ProductDetailPro
             {/* Contact & Zalo */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <a
-                href="tel:+84836389488"
+                href="tel:+84898296336"
                 className="w-full border-2 border-blue-600 text-blue-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 font-medium text-sm"
               >
                 <Phone className="w-4 h-4" />
-                Gọi: 0836 389 488
+                Gọi: 0898 296 336
               </a>
               <a
-                href="https://zalo.me/0836389488"
+                href="https://zalo.me/0898296336"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full bg-[#0068FF] text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium text-sm shadow-sm"

@@ -156,7 +156,7 @@ export async function sendContactEmailWeb3Forms(formData: ContactFormData): Prom
     } catch (dbError) {
       return {
         success: false,
-        message: '❌ Có lỗi xảy ra. Vui lòng gọi trực tiếp: (+84) 836 389 488'
+        message: '❌ Có lỗi xảy ra. Vui lòng gọi trực tiếp: (+84) 898 296 336'
       };
     }
   }
@@ -222,7 +222,7 @@ export async function sendContactEmailWithEmailJS(formData: ContactFormData): Pr
     } catch (dbError) {
       return {
         success: false,
-        message: '❌ Có lỗi xảy ra. Vui lòng gọi trực tiếp: (+84) 836 389 488'
+        message: '❌ Có lỗi xảy ra. Vui lòng gọi trực tiếp: (+84) 898 296 336'
       };
     }
   }

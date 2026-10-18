@@ -358,18 +358,18 @@ export function About() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="tel:+84836389488"
+                href="tel:+84898296336"
                 className="bg-white text-blue-600 px-8 py-3 rounded-full hover:bg-gray-100 transition-colors inline-block"
               >
-                Gọi ngay: (+84) 836 389 488
+                Gọi ngay: (+84) 898 296 336
               </a>
               <a
-                href="https://zalo.me/0836389488"
+                href="https://zalo.me/0898296336"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="border-2 border-white px-8 py-3 rounded-full hover:bg-white hover:text-blue-600 transition-colors inline-block"
               >
-                Chat Zalo: 0836 389 488
+                Chat Zalo: 0898 296 336
               </a>
             </div>
           </motion.div>

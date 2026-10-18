@@ -6,7 +6,7 @@
 -- 1. SEED USERS
 -- ============================================
 INSERT INTO users (email, password, name, phone, address, provider, role) VALUES
-('admin@voltor.com', '$2b$10$K6mVQJzwT3xvJZQbX9p8.Oy8QZ7KJYvTYxBqGZqFOZLx5pYGJZ8Fm', 'Admin VOLTOR', '0836389488', 'Số 112-118 Lý Thường Kiệt, Thị trấn Lim, Tiên Du, Bắc Ninh', 'local', 'admin'),
+('admin@voltor.com', '$2b$10$K6mVQJzwT3xvJZQbX9p8.Oy8QZ7KJYvTYxBqGZqFOZLx5pYGJZ8Fm', 'Admin VOLTOR', '0898296336', 'Số 112-118 Lý Thường Kiệt, Thị trấn Lim, Tiên Du, Bắc Ninh', 'local', 'admin'),
 ('user@voltor.com', '$2b$10$K6mVQJzwT3xvJZQbX9p8.Oy8QZ7KJYvTYxBqGZqFOZLx5pYGJZ8Fm', 'Nguyễn Văn A', '0901234567', 'Hà Nội', 'local', 'user'),
 ('nguyenvana@gmail.com', NULL, 'Nguyễn Văn A', '0912345678', 'TP. HCM', 'google', 'user'),
 ('levanb@outlook.com', NULL, 'Lê Văn B', '0923456789', 'Đà Nẵng', 'facebook', 'user');

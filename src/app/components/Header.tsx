@@ -52,9 +52,9 @@ export function Header({ currentPage, onNavigate, cartItemCount }: HeaderProps) 
           </nav>
 
           <div className="flex items-center gap-4">
-            <a href="tel:+84836389488" className="hidden sm:flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors">
+            <a href="tel:+84898296336" className="hidden sm:flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors">
               <Phone className="w-5 h-5 text-blue-600" />
-              <span className="font-medium">(+84) 836 389 488</span>
+              <span className="font-medium">(+84) 898 296 336</span>
             </a>
             
             <button
@@ -104,11 +104,11 @@ export function Header({ currentPage, onNavigate, cartItemCount }: HeaderProps) 
               </button>
             ))}
             <a 
-              href="tel:+84836389488" 
+              href="tel:+84898296336" 
               className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg sm:hidden"
             >
               <Phone className="w-5 h-5 text-blue-600" />
-              <span>(+84) 836 389 488</span>
+              <span>(+84) 898 296 336</span>
             </a>
           </nav>
         )}

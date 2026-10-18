@@ -25,7 +25,7 @@ INSERT INTO users (
     'huuduy0811@gmail.com',
     '$2b$10$rGfVkJ5tY8h9Z2KxQwN3/.F1XYvZ0qH3sP8tF5mK6pL7nQ9sR1tU2', -- 'Huuduy0911@' hashed
     'VOLTOR Admin',
-    '0836389488',
+    '0898296336',
     'Số 112-118 Lý Thường Kiệt, Thị trấn Lim, Tiên Du, Bắc Ninh',
     NULL,
     'local',

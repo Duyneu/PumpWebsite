@@ -42,7 +42,7 @@ export function Footer() {
                 
                 {/* Zalo with Animation */}
                 <a
-                  href="https://zalo.me/0836389488"
+                  href="https://zalo.me/0898296336"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="footer-zalo-btn"
@@ -163,8 +163,8 @@ export function Footer() {
                 <li className="flex items-start gap-2">
                   <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <div>
-                    <a href="tel:+84836389488" className="hover:text-blue-400 transition-colors">
-                      (+84) 836 389 488
+                    <a href="tel:+84898296336" className="hover:text-blue-400 transition-colors">
+                      (+84) 898 296 336
                     </a>
                     <div className="text-xs text-gray-400">Hotline 24/7</div>
                   </div>

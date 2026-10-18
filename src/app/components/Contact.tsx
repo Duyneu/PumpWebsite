@@ -71,11 +71,11 @@ export function Contact() {
               <div>
                 <div className="mb-1">Hotline & Zalo tư vấn</div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <a href="tel:+84836389488" className="text-blue-600 font-semibold hover:underline">
-                    (+84) 836 389 488
+                  <a href="tel:+84898296336" className="text-blue-600 font-semibold hover:underline">
+                    (+84) 898 296 336
                   </a>
                   <a
-                    href="https://zalo.me/0836389488"
+                    href="https://zalo.me/0898296336"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full border border-blue-200 hover:bg-blue-600 hover:text-white transition-colors inline-flex items-center gap-1 font-medium"

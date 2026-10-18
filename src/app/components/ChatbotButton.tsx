@@ -78,14 +78,14 @@ export function ChatbotButton({ isOpen, onClick, hasNotification }: ChatbotButto
 
       {/* Zalo Button */}
       <a
-        href="https://zalo.me/0836389488"
+        href="https://zalo.me/0898296336"
         target="_blank"
         rel="noopener noreferrer"
         onMouseEnter={() => setHoveredButton('zalo')}
         onMouseLeave={() => setHoveredButton(null)}
         className="group relative w-12 h-12 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center overflow-hidden bg-[#0068FF] hover:shadow-[0_8px_30px_rgba(0,104,255,0.4)] hover:scale-110"
-        aria-label="Chat qua Zalo (0836 389 488)"
-        title="Chat qua Zalo (0836 389 488)"
+        aria-label="Chat qua Zalo (0898 296 336)"
+        title="Chat qua Zalo (0898 296 336)"
       >
         {/* Ripple effect */}
         <span className="absolute inset-0 rounded-full bg-white/20 scale-0 group-hover:scale-100 transition-transform duration-500" />
