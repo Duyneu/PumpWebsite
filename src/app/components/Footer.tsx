@@ -1,6 +1,7 @@
 import { Facebook, Mail, Phone, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logo from 'figma:asset/f7441d1239749f768a4a91d19e063fed0d3c3bf0.png';
+import { getEmailComposeUrl, handleEmailClickWithCopy } from '../utils/emailLink';
 
 export function Footer() {
   const navigate = useNavigate();
@@ -34,8 +35,12 @@ export function Footer() {
                   <Facebook className="w-5 h-5" />
                 </a>
                 <a
-                  href="mailto:voltorvietnam@gmail.com"
-                  className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors"
+                  href={getEmailComposeUrl('Liên hệ hợp tác VOLTOR')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleEmailClickWithCopy}
+                  className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-red-600 transition-colors"
+                  title="Gửi email qua Gmail (voltorvietnam@gmail.com)"
                 >
                   <Mail className="w-5 h-5" />
                 </a>
@@ -171,7 +176,14 @@ export function Footer() {
                 </li>
                 <li className="flex items-start gap-2">
                   <Mail className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <a href="mailto:voltorvietnam@gmail.com" className="hover:text-blue-400 transition-colors">
+                  <a
+                    href={getEmailComposeUrl('Tư vấn sản phẩm VOLTOR')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={handleEmailClickWithCopy}
+                    className="hover:text-blue-400 transition-colors"
+                    title="Mở Gmail gửi tới voltorvietnam@gmail.com"
+                  >
                     voltorvietnam@gmail.com
                   </a>
                 </li>

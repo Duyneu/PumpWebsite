@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { sendEmail } from '../utils/emailService';
+import { getEmailComposeUrl, handleEmailClickWithCopy } from '../utils/emailLink';
 
 export function Contact() {
   const [formData, setFormData] = useState({
@@ -95,7 +96,14 @@ export function Contact() {
               </div>
               <div>
                 <div className="mb-1">Email</div>
-                <a href="mailto:voltorvietnam@gmail.com" className="text-blue-600 hover:underline">
+                <a
+                  href={getEmailComposeUrl('Tư vấn sản phẩm VOLTOR')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleEmailClickWithCopy}
+                  className="text-blue-600 hover:underline font-medium"
+                  title="Mở Gmail gửi tới voltorvietnam@gmail.com"
+                >
                   voltorvietnam@gmail.com
                 </a>
                 <p className="text-sm text-gray-500 mt-1">
