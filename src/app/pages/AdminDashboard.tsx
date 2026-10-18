@@ -7,12 +7,16 @@ import {
   Layers,
   ArrowRight,
   History,
-  Trash2
+  Trash2,
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { products, mainCategories } from '../data/products';
 import { getAuditLogs, clearAuditLogs, AuditLogItem } from '../utils/auditLog';
+import { AdminAccountModal } from '../components/AdminAccountModal';
+import { getCurrentAdmin } from '../utils/adminAuth';
 
 export function AdminDashboard() {
   const navigate = useNavigate();
@@ -20,6 +24,8 @@ export function AdminDashboard() {
   // Load custom products from localStorage if any
   const [totalCustom, setTotalCustom] = useState(0);
   const [logs, setLogs] = useState<AuditLogItem[]>([]);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const currentAdmin = getCurrentAdmin();
 
   useEffect(() => {
     try {
@@ -52,7 +58,15 @@ export function AdminDashboard() {
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">Quản Trị VOLTOR</h1>
               <p className="text-gray-500 text-sm mt-0.5">Quản lý trực tiếp danh mục & sản phẩm trên website</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Button
+                variant="outline"
+                onClick={() => setIsAccountModalOpen(true)}
+                className="gap-2 border-slate-300 text-slate-700 hover:bg-slate-50"
+              >
+                <ShieldCheck className="w-4 h-4 text-blue-600" />
+                Tài khoản & Mật khẩu
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => window.open('/', '_blank')}
@@ -244,6 +258,12 @@ export function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* Account & Password Management Modal */}
+      <AdminAccountModal
+        isOpen={isAccountModalOpen}
+        onClose={() => setIsAccountModalOpen(false)}
+      />
     </div>
   );
 }
