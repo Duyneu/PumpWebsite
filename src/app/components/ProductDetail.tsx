@@ -3,6 +3,7 @@ import { Product } from '../types';
 import { ArrowLeft, ShoppingCart, Check, Truck, Shield, Phone, Edit } from 'lucide-react';
 import { ProductReviews } from './ProductReviews';
 import { useNavigate } from 'react-router-dom';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface ProductDetailProps {
   product: Product;
@@ -44,10 +45,11 @@ export function ProductDetail({ product, onAddToCart, onBack }: ProductDetailPro
         <div className="grid md:grid-cols-2 gap-12">
           {/* Product Image */}
           <div className="bg-gray-100 rounded-2xl overflow-hidden">
-            <img
+            <ImageWithFallback
               src={product.image}
               alt={product.name}
               className="w-full h-full object-cover aspect-square"
+              decoding="async"
             />
           </div>
 

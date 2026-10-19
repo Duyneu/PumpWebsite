@@ -177,6 +177,8 @@ export function About() {
                   src={teamMeetingImg}
                   alt="Đội ngũ điều hành VOLTOR Việt Nam"
                   className="w-full h-[400px] object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent"></div>
                 <div className="absolute bottom-6 left-6 right-6 text-white">
@@ -413,6 +415,8 @@ export function About() {
                   src={technicalTeamImg}
                   alt="Kỹ thuật viên VOLTOR kiểm tra máy bơm"
                   className="rounded-2xl shadow-lg w-full h-56 object-cover border border-slate-200"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="bg-slate-900 text-white p-5 rounded-2xl">
                   <div className="text-2xl font-black text-cyan-400">100%</div>
@@ -429,6 +433,8 @@ export function About() {
                   src={productImg}
                   alt="Kho sản phẩm máy bơm VOLTOR"
                   className="rounded-2xl shadow-lg w-full h-56 object-cover border border-slate-200"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
             </motion.div>

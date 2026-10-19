@@ -4,7 +4,16 @@
 
 const express = require('express');
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
 const db = require('../db');
+const { verifyAdmin } = require('../middleware/auth');
+
+const ALLOWED_PRODUCT_FIELDS = [
+  'name', 'slug', 'sku', 'category_id', 'price', 'original_price',
+  'discount_percent', 'short_description', 'description', 'brand',
+  'model', 'origin', 'warranty', 'specifications', 'image', 'images',
+  'stock', 'is_featured', 'is_bestseller', 'is_new', 'is_active'
+];
 
 // ============================================
 // GET /api/products - Lấy danh sách sản phẩm
@@ -197,95 +206,149 @@ router.get('/:slug', async (req, res, next) => {
 });
 
 // ============================================
-// POST /api/products - Tạo sản phẩm mới (Admin)
+// POST /api/products - Tạo sản phẩm mới (Admin only)
 // ============================================
-router.post('/', async (req, res, next) => {
-  try {
-    const {
-      name, slug, sku, category_id,
-      price, original_price, discount_percent,
-      short_description, description,
-      brand, model, origin, warranty,
-      specifications, image, images,
-      stock
-    } = req.body;
+router.post(
+  '/',
+  verifyAdmin,
+  [
+    body('name').trim().notEmpty().withMessage('Tên sản phẩm không được để trống').isLength({ max: 255 }),
+    body('sku').trim().notEmpty().withMessage('Mã SKU không được để trống').isLength({ max: 100 }),
+    body('price').isFloat({ min: 0 }).withMessage('Giá sản phẩm phải là số không âm'),
+    body('stock').optional().isInt({ min: 0 }).withMessage('Số lượng tồn kho phải là số nguyên không âm')
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: errors.array()[0].msg,
+            details: errors.array()
+          }
+        });
+      }
 
-    const [result] = await db.query(`
-      INSERT INTO products (
+      const {
         name, slug, sku, category_id,
         price, original_price, discount_percent,
         short_description, description,
         brand, model, origin, warranty,
-        specifications, image, images, stock
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      name, slug, sku, category_id,
-      price, original_price || null, discount_percent || 0,
-      short_description, description,
-      brand, model, origin, warranty,
-      JSON.stringify(specifications),
-      image,
-      JSON.stringify(images),
-      stock || 0
-    ]);
+        specifications, image, images,
+        stock
+      } = req.body;
 
-    res.status(201).json({
-      success: true,
-      data: {
-        id: result.insertId,
-        message: 'Product created successfully'
-      }
-    });
+      // Auto-generate slug if not provided
+      const cleanSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-  } catch (error) {
-    next(error);
-  }
-});
+      const [result] = await db.query(`
+        INSERT INTO products (
+          name, slug, sku, category_id,
+          price, original_price, discount_percent,
+          short_description, description,
+          brand, model, origin, warranty,
+          specifications, image, images, stock
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        name, cleanSlug, sku, category_id || null,
+        price, original_price || null, discount_percent || 0,
+        short_description || null, description || null,
+        brand || null, model || null, origin || null, warranty || null,
+        JSON.stringify(specifications || {}),
+        image || null,
+        JSON.stringify(images || []),
+        stock || 0
+      ]);
 
-// ============================================
-// PUT /api/products/:id - Cập nhật sản phẩm (Admin)
-// ============================================
-router.put('/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body;
+      res.status(201).json({
+        success: true,
+        data: {
+          id: result.insertId,
+          message: 'Tạo sản phẩm thành công'
+        }
+      });
 
-    // Build dynamic update query
-    const fields = [];
-    const values = [];
-
-    for (const [key, value] of Object.entries(updates)) {
-      if (['specifications', 'images'].includes(key)) {
-        fields.push(`${key} = ?`);
-        values.push(JSON.stringify(value));
-      } else {
-        fields.push(`${key} = ?`);
-        values.push(value);
-      }
+    } catch (error) {
+      next(error);
     }
-
-    values.push(id);
-
-    await db.query(`
-      UPDATE products 
-      SET ${fields.join(', ')}
-      WHERE id = ?
-    `, values);
-
-    res.json({
-      success: true,
-      data: { message: 'Product updated successfully' }
-    });
-
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 // ============================================
-// DELETE /api/products/:id - Xóa sản phẩm (Admin)
+// PUT /api/products/:id - Cập nhật sản phẩm (Admin only)
 // ============================================
-router.delete('/:id', async (req, res, next) => {
+router.put(
+  '/:id',
+  verifyAdmin,
+  [
+    body('price').optional().isFloat({ min: 0 }).withMessage('Giá sản phẩm phải là số không âm'),
+    body('stock').optional().isInt({ min: 0 }).withMessage('Số lượng kho phải là số nguyên không âm')
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: errors.array()[0].msg,
+            details: errors.array()
+          }
+        });
+      }
+
+      const { id } = req.params;
+      const updates = req.body;
+
+      // Filter only allowed fields to prevent mass assignment
+      const fields = [];
+      const values = [];
+
+      for (const [key, value] of Object.entries(updates)) {
+        if (!ALLOWED_PRODUCT_FIELDS.includes(key)) continue;
+
+        if (['specifications', 'images'].includes(key)) {
+          fields.push(`${key} = ?`);
+          values.push(JSON.stringify(value || (key === 'images' ? [] : {})));
+        } else {
+          fields.push(`${key} = ?`);
+          values.push(value);
+        }
+      }
+
+      if (fields.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Không có trường dữ liệu hợp lệ để cập nhật' }
+        });
+      }
+
+      values.push(id);
+
+      await db.query(`
+        UPDATE products 
+        SET ${fields.join(', ')}
+        WHERE id = ?
+      `, values);
+
+      res.json({
+        success: true,
+        data: { message: 'Cập nhật sản phẩm thành công' }
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================
+// DELETE /api/products/:id - Xóa sản phẩm (Admin only)
+// ============================================
+router.delete('/:id', verifyAdmin, async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -294,7 +357,7 @@ router.delete('/:id', async (req, res, next) => {
 
     res.json({
       success: true,
-      data: { message: 'Product deleted successfully' }
+      data: { message: 'Đã xóa sản phẩm thành công' }
     });
 
   } catch (error) {

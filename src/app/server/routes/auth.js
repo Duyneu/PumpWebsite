@@ -6,136 +6,191 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator');
 const db = require('../db');
+const { JWT_SECRET } = require('../middleware/auth');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'voltor-secret-key-change-in-production';
-const JWT_EXPIRES_IN = '7d';
+const JWT_EXPIRES_IN = '24h'; // Session expires in 24 hours
+
+// Helper to set secure auth cookie
+const setAuthCookie = (res, token) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'strict' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  });
+};
 
 // ============================================
 // POST /api/auth/register - Đăng ký
 // ============================================
-router.post('/register', async (req, res, next) => {
-  try {
-    const { email, password, name, phone } = req.body;
-
-    // Validate
-    if (!email || !password || !name) {
-      return res.status(400).json({
-        success: false,
-        error: { message: 'Email, password and name are required' }
-      });
-    }
-
-    // Check email exists
-    const [existing] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
-    if (existing.length > 0) {
-      return res.status(400).json({
-        success: false,
-        error: { message: 'Email already exists' }
-      });
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
-    const [result] = await db.query(`
-      INSERT INTO users (email, password, name, phone, provider)
-      VALUES (?, ?, ?, ?, 'local')
-    `, [email, hashedPassword, name, phone || null]);
-
-    const userId = result.insertId;
-
-    // Generate JWT
-    const token = jwt.sign(
-      { id: userId, email, role: 'user' },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
-    );
-
-    res.status(201).json({
-      success: true,
-      data: {
-        user: { id: userId, email, name, phone, role: 'user' },
-        token
+router.post(
+  '/register',
+  [
+    body('email').isEmail().withMessage('Email không hợp lệ').normalizeEmail(),
+    body('password').isLength({ min: 6 }).withMessage('Mật khẩu tối thiểu 6 ký tự'),
+    body('name').trim().notEmpty().withMessage('Họ và tên không được để trống')
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: errors.array()[0].msg,
+            details: errors.array()
+          }
+        });
       }
-    });
 
-  } catch (error) {
-    next(error);
+      const { email, password, name, phone } = req.body;
+
+      // Check email exists
+      const [existing] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+      if (existing.length > 0) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Email đã tồn tại trong hệ thống' }
+        });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user with default role 'user'
+      const [result] = await db.query(`
+        INSERT INTO users (email, password, name, phone, provider, role)
+        VALUES (?, ?, ?, ?, 'local', 'user')
+      `, [email, hashedPassword, name, phone || null]);
+
+      const userId = result.insertId;
+
+      // Generate JWT
+      const token = jwt.sign(
+        { id: userId, email, role: 'user' },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
+      );
+
+      // Set HttpOnly secure cookie
+      setAuthCookie(res, token);
+
+      res.status(201).json({
+        success: true,
+        data: {
+          user: { id: userId, email, name, phone, role: 'user' },
+          token
+        }
+      });
+
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // ============================================
 // POST /api/auth/login - Đăng nhập
 // ============================================
-router.post('/login', async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-
-    // Validate
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: { message: 'Email and password are required' }
-      });
-    }
-
-    // Get user
-    const [users] = await db.query(`
-      SELECT id, email, password, name, phone, address, avatar, role, provider
-      FROM users
-      WHERE email = ? AND is_active = 1
-    `, [email]);
-
-    if (users.length === 0) {
-      return res.status(401).json({
-        success: false,
-        error: { message: 'Invalid email or password' }
-      });
-    }
-
-    const user = users[0];
-
-    // Check if OAuth user
-    if (user.provider !== 'local') {
-      return res.status(400).json({
-        success: false,
-        error: { message: `Please login with ${user.provider}` }
-      });
-    }
-
-    // Verify password
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
-      return res.status(401).json({
-        success: false,
-        error: { message: 'Invalid email or password' }
-      });
-    }
-
-    // Update last login
-    await db.query('UPDATE users SET last_login = NOW() WHERE id = ?', [user.id]);
-
-    // Generate JWT
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
-    );
-
-    // Remove password from response
-    delete user.password;
-
-    res.json({
-      success: true,
-      data: {
-        user,
-        token
+router.post(
+  '/login',
+  [
+    body('email').isEmail().withMessage('Email không hợp lệ').normalizeEmail(),
+    body('password').notEmpty().withMessage('Vui lòng nhập mật khẩu')
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: errors.array()[0].msg,
+            details: errors.array()
+          }
+        });
       }
-    });
 
-  } catch (error) {
+      const { email, password } = req.body;
+
+      // Get user
+      const [users] = await db.query(`
+        SELECT id, email, password, name, phone, address, avatar, role, provider
+        FROM users
+        WHERE email = ? AND is_active = 1
+      `, [email]);
+
+      if (users.length === 0) {
+        return res.status(401).json({
+          success: false,
+          error: { message: 'Email hoặc mật khẩu không chính xác' }
+        });
+      }
+
+      const user = users[0];
+
+      // Check if OAuth user
+      if (user.provider !== 'local') {
+        return res.status(400).json({
+          success: false,
+          error: { message: `Vui lòng đăng nhập bằng ${user.provider}` }
+        });
+      }
+
+      // Verify password
+      const isValid = await bcrypt.compare(password, user.password);
+      if (!isValid) {
+        return res.status(401).json({
+          success: false,
+          error: { message: 'Email hoặc mật khẩu không chính xác' }
+        });
+      }
+
+      // Update last login
+      await db.query('UPDATE users SET last_login = NOW() WHERE id = ?', [user.id]);
+
+      // Generate JWT
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
+      );
+
+      // Set HttpOnly secure cookie
+      setAuthCookie(res, token);
+
+      // Remove password from response
+      delete user.password;
+
+      res.json({
+        success: true,
+        data: {
+          user,
+          token
+        }
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================
+// POST /api/auth/logout - Đăng xuất & xóa cookie
+// ============================================
+router.post('/logout', (req, res) => {
+  res.clearCookie('token');
+  res.json({
+    success: true,
+    message: 'Đăng xuất thành công'
+  });
+});
     next(error);
   }
 });

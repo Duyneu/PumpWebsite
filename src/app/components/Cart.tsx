@@ -21,6 +21,7 @@ import { Order } from '../utils/orders';
 import { useNavigate, Link } from 'react-router-dom';
 import { getEffectiveProducts } from '../utils/productStorage';
 import { toast } from 'sonner';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface CartProps {
   items: CartItem[];
@@ -202,7 +203,7 @@ export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping, on
                         <span className="absolute top-2 left-2 bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-md">
                           {product.category}
                         </span>
-                        <img
+                        <ImageWithFallback
                           src={product.image}
                           alt={product.name}
                           className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
@@ -360,10 +361,11 @@ export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping, on
                   onClick={() => navigate(`/products/${item.id}`)}
                   className="w-full sm:w-28 sm:h-28 aspect-video sm:aspect-square bg-slate-50 rounded-xl p-2 flex items-center justify-center flex-shrink-0 border border-slate-100 cursor-pointer overflow-hidden group"
                 >
-                  <img
+                  <ImageWithFallback
                     src={item.image}
                     alt={item.name}
                     className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
                   />
                 </div>
 
