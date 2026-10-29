@@ -11,32 +11,54 @@ const STORAGE_KEY = 'voltor_admin_accounts';
 const SESSION_KEY = 'voltor_current_admin';
 
 // Tài khoản mặc định ban đầu
-const DEFAULT_ADMIN: AdminAccount = {
-  id: 'admin_root',
-  email: 'huuduy0811@gmail.com',
-  name: 'Nguyễn Hữu Duy',
-  passwordHash: 'Huuduy0911@',
-  createdAt: '18/10/2026',
-  isSuperAdmin: true,
-};
+const DEFAULT_ADMINS: AdminAccount[] = [
+  {
+    id: 'admin_voltor',
+    email: 'voltorvietnam@gmail.com',
+    name: 'VOLTOR Quản Trị',
+    passwordHash: 'password123',
+    createdAt: '29/10/2026',
+    isSuperAdmin: true,
+  },
+  {
+    id: 'admin_voltor_alt',
+    email: 'admin@voltor.com',
+    name: 'Admin VOLTOR',
+    passwordHash: 'password123',
+    createdAt: '29/10/2026',
+    isSuperAdmin: true,
+  },
+  {
+    id: 'admin_root',
+    email: 'huuduy0811@gmail.com',
+    name: 'Nguyễn Hữu Duy',
+    passwordHash: 'Huuduy0911@',
+    createdAt: '18/10/2026',
+    isSuperAdmin: true,
+  },
+];
 
 export function getAdminAccounts(): AdminAccount[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      // Khởi tạo tài khoản mặc định nếu chưa có
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([DEFAULT_ADMIN]));
-      return [DEFAULT_ADMIN];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_ADMINS));
+      return DEFAULT_ADMINS;
     }
     const accounts: AdminAccount[] = JSON.parse(raw);
-    // Luôn đảm bảo tài khoản huuduy0811@gmail.com có mặt
-    if (!accounts.some(a => a.email.toLowerCase() === DEFAULT_ADMIN.email.toLowerCase())) {
-      accounts.unshift(DEFAULT_ADMIN);
+    let updated = false;
+    for (const def of DEFAULT_ADMINS) {
+      if (!accounts.some(a => a.email.toLowerCase() === def.email.toLowerCase())) {
+        accounts.push(def);
+        updated = true;
+      }
+    }
+    if (updated) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
     }
     return accounts;
   } catch {
-    return [DEFAULT_ADMIN];
+    return DEFAULT_ADMINS;
   }
 }
 
@@ -63,7 +85,7 @@ export function setCurrentAdmin(admin: AdminAccount | null) {
 export async function verifyAdminLogin(email: string, pass: string): Promise<AdminAccount | null> {
   const trimmedEmail = email.trim().toLowerCase();
 
-  // 1. Authenticate with PostgreSQL Backend API
+  // 1. Try PostgreSQL Backend API if available
   try {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
@@ -71,36 +93,48 @@ export async function verifyAdminLogin(email: string, pass: string): Promise<Adm
       body: JSON.stringify({ email: trimmedEmail, password: pass }),
     });
 
-    const data = await res.json();
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await res.json();
 
-    if (res.ok && data.success && data.data?.user) {
-      const user = data.data.user;
-      if (user.role !== 'admin') {
-        throw new Error('Tài khoản này không có quyền quản trị viên!');
+      if (res.ok && data.success && data.data?.user) {
+        const user = data.data.user;
+        if (user.role !== 'admin') {
+          throw new Error('Tài khoản này không có quyền quản trị viên!');
+        }
+
+        const adminUser: AdminAccount = {
+          id: String(user.id),
+          email: user.email,
+          name: user.name || user.email,
+          passwordHash: '',
+          createdAt: new Date().toLocaleDateString('vi-VN'),
+          isSuperAdmin: true,
+        };
+
+        if (data.data.token) {
+          localStorage.setItem('auth_token', data.data.token);
+        }
+        setCurrentAdmin(adminUser);
+        return adminUser;
       }
 
-      const adminUser: AdminAccount = {
-        id: String(user.id),
-        email: user.email,
-        name: user.name || user.email,
-        passwordHash: '',
-        createdAt: new Date().toLocaleDateString('vi-VN'),
-        isSuperAdmin: true,
-      };
-
-      if (data.data.token) {
-        localStorage.setItem('auth_token', data.data.token);
+      if (res.status === 400 || res.status === 401) {
+        const accounts = getAdminAccounts();
+        const localMatch = accounts.find(a => a.email.toLowerCase() === trimmedEmail && a.passwordHash === pass);
+        if (!localMatch) {
+          throw new Error(data.error?.message || data.message || 'Email hoặc mật khẩu không chính xác!');
+        }
       }
-      setCurrentAdmin(adminUser);
-      return adminUser;
-    } else if (res.status === 400 || res.status === 401) {
-      throw new Error(data.error?.message || data.message || 'Email hoặc mật khẩu không chính xác!');
     }
   } catch (err: any) {
-    if (err.message && !err.message.includes('fetch') && !err.message.includes('Failed to fetch')) {
+    if (err.message && (
+      err.message.includes('không có quyền') ||
+      err.message.includes('không chính xác')
+    )) {
       throw err;
     }
-    // Fallback to local accounts if backend is unreachable during local development
+    // Network / proxy / empty response: fallback to local accounts
   }
 
   // 2. Local fallback
@@ -153,7 +187,7 @@ export function changeAdminPassword(email: string, oldPass: string, newPass: str
 
 export function deleteAdminAccount(email: string): { success: boolean; message: string } {
   const trimmedEmail = email.trim().toLowerCase();
-  if (trimmedEmail === DEFAULT_ADMIN.email.toLowerCase()) {
+  if (DEFAULT_ADMINS.some(d => d.email.toLowerCase() === trimmedEmail)) {
     return { success: false, message: 'Không thể xóa tài khoản Quản trị viên gốc!' };
   }
   const accounts = getAdminAccounts();
