@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import * as motion from 'motion/react-client';
 import { useNavigate } from 'react-router-dom';
-import { getEffectiveProducts } from '../utils/productStorage';
+import { useProducts } from '../hooks/useProducts';
 
 export type Page = 'home' | 'products' | 'about' | 'contact' | 'cart';
 
@@ -91,19 +91,10 @@ const showcaseProducts = [
 
 export function Hero({ onNavigate }: HeroProps) {
   const navigate = useNavigate();
+  const products = useProducts();
   const [searchQuery, setSearchQuery] = useState('');
   const [featuredIndex, setFeaturedIndex] = useState(0);
-  const [productCount, setProductCount] = useState(() => getEffectiveProducts().length);
-
-  useEffect(() => {
-    const handleProductsChange = () => {
-      setProductCount(getEffectiveProducts().length);
-    };
-    window.addEventListener('voltor_products_changed', handleProductsChange);
-    return () => {
-      window.removeEventListener('voltor_products_changed', handleProductsChange);
-    };
-  }, []);
+  const productCount = products.length;
 
   const handlePrev = (e?: React.MouseEvent) => {
     e?.stopPropagation();

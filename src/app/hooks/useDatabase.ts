@@ -80,13 +80,10 @@ export function useReviews(productId?: string) {
 
   const fetchReviews = async () => {
     setLoading(true);
-    const result = await apiCall('/api/reviews', 'GET');
+    const endpoint = productId ? `/api/reviews?product_id=${encodeURIComponent(productId)}` : '/api/reviews';
+    const result = await apiCall(endpoint, 'GET');
     if (result.success) {
-      let data = result.data;
-      if (productId) {
-        data = data.filter((r: any) => r.productId === productId);
-      }
-      setReviews(data);
+      setReviews(result.data);
       setError(null);
     } else {
       setError(result.error || 'Failed to fetch reviews');
@@ -135,13 +132,10 @@ export function useOrders(userId?: string) {
 
   const fetchOrders = async () => {
     setLoading(true);
-    const result = await apiCall('/api/orders', 'GET');
+    const endpoint = userId ? `/api/orders?user_id=${encodeURIComponent(userId)}` : '/api/orders';
+    const result = await apiCall(endpoint, 'GET');
     if (result.success) {
-      let data = result.data;
-      if (userId) {
-        data = data.filter((o: any) => o.userId === userId);
-      }
-      setOrders(data);
+      setOrders(result.data);
       setError(null);
     } else {
       setError(result.error || 'Failed to fetch orders');

@@ -19,23 +19,38 @@ import {
 import { CheckoutModal } from './CheckoutModal';
 import { Order } from '../utils/orders';
 import { useNavigate, Link } from 'react-router-dom';
-import { getEffectiveProducts } from '../utils/productStorage';
+import { useProducts } from '../hooks/useProducts';
 import { toast } from 'sonner';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface CartProps {
-  items: CartItem[];
-  onUpdateQuantity: (productId: string, quantity: number) => void;
-  onRemove: (productId: string) => void;
-  onContinueShopping: () => void;
+  onContinueShopping?: () => void;
+  items?: CartItem[];
+  onUpdateQuantity?: (productId: string, quantity: number) => void;
+  onRemove?: (productId: string) => void;
   onClearCart?: () => void;
 }
 
 const FREE_SHIPPING_THRESHOLD = 5000000; // 5,000,000 VND
 
-export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping, onClearCart }: CartProps) {
+export function Cart({
+  items: propItems,
+  onUpdateQuantity: propUpdateQuantity,
+  onRemove: propRemove,
+  onContinueShopping,
+  onClearCart: propClearCart,
+}: CartProps = {}) {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const cart = useCart();
+  const allProducts = useProducts();
+
+  const items = propItems ?? cart.cartItems;
+  const onUpdateQuantity = propUpdateQuantity ?? cart.updateQuantity;
+  const onRemove = propRemove ?? cart.removeFromCart;
+  const onClearCart = propClearCart ?? cart.clearCart;
+  const { addToCart } = cart;
+  const handleContinueShopping = onContinueShopping ?? (() => navigate('/products'));
+
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null);
 
@@ -56,7 +71,7 @@ export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping, on
 
   // Get recommended products for the empty cart view
   const recommendedProducts = useMemo(() => {
-    const all = getEffectiveProducts();
+    const all = allProducts;
     // Prioritize popular models (4SDM, WQ, CPM, Solar)
     const featured = all.filter(p => 
       p.name.includes('4SDM') || 
@@ -66,9 +81,9 @@ export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping, on
       p.name.includes('PZB')
     );
     return (featured.length >= 4 ? featured : all).slice(0, 4);
-  }, []);
+  }, [allProducts]);
 
-  const totalAvailableProducts = useMemo(() => getEffectiveProducts().length, []);
+  const totalAvailableProducts = allProducts.length;
 
   const handleAddRecommended = (product: typeof recommendedProducts[0]) => {
     addToCart(product, 1);
@@ -126,7 +141,7 @@ export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping, on
               {/* Action Buttons */}
               <div className="pt-3 flex flex-wrap justify-center gap-3">
                 <button
-                  onClick={onContinueShopping}
+                  onClick={handleContinueShopping}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg inline-flex items-center gap-2 text-sm transform hover:-translate-y-0.5"
                 >
                   <span>Khám phá tất cả {totalAvailableProducts} sản phẩm</span>
@@ -180,7 +195,7 @@ export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping, on
               </div>
 
               <button
-                onClick={onContinueShopping}
+                onClick={handleContinueShopping}
                 className="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
               >
                 <span>Xem tất cả</span>
@@ -337,7 +352,7 @@ export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping, on
               </button>
 
               <button
-                onClick={onContinueShopping}
+                onClick={handleContinueShopping}
                 className="text-xs font-semibold text-blue-600 hover:text-blue-700 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition-colors border border-blue-200/80"
               >
                 + Tiếp tục mua hàng
@@ -440,7 +455,7 @@ export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping, on
                 100% Sản phẩm chính hãng có hóa đơn & bảo hành
               </span>
               <button
-                onClick={onContinueShopping}
+                onClick={handleContinueShopping}
                 className="font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
               >
                 <span>Xem thêm các sản phẩm khác</span>
@@ -539,7 +554,7 @@ export function Cart({ items, onUpdateQuantity, onRemove, onContinueShopping, on
                 </button>
 
                 <button
-                  onClick={onContinueShopping}
+                  onClick={handleContinueShopping}
                   className="w-full bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-bold py-2.5 rounded-xl transition-colors text-xs text-center"
                 >
                   Tiếp tục mua hàng

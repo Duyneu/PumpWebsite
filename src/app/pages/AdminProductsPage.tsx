@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -41,7 +41,8 @@ import {
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
 import { addAuditLog } from '../utils/auditLog';
-import { getEffectiveProducts, deleteProduct } from '../utils/productStorage';
+import { deleteProduct } from '../utils/productStorage';
+import { useProducts } from '../hooks/useProducts';
 
 interface Product {
   id: string | number;
@@ -59,63 +60,30 @@ interface Product {
 
 export function AdminProductsPage() {
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const rawProducts = useProducts();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchProducts();
+  const products: Product[] = useMemo(() => {
+    return rawProducts.map((p) => ({
+      id: p.id,
+      name: p.name,
+      sku: String(p.id),
+      price: p.price || 0,
+      stock: p.inStock ? 25 : 0,
+      category: p.category || 'Máy bơm',
+      brand: p.name.includes('DONGYIN') ? 'DONGYIN' : 'VOLTOR',
+      is_featured: false,
+      is_bestseller: false,
+      is_new: false,
+      image: p.image || '/dongyin-images/sd_pump_4sdm.jpg',
+    }));
+  }, [rawProducts]);
 
-    const handleStorageChange = () => {
-      fetchProducts();
-    };
-    window.addEventListener('voltor_products_changed', handleStorageChange);
-    return () => {
-      window.removeEventListener('voltor_products_changed', handleStorageChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    filterProducts();
-  }, [searchQuery, selectedCategory, products]);
-
-  const fetchProducts = async () => {
-    try {
-      setIsLoading(true);
-      const allEffective = getEffectiveProducts();
-
-      const realProducts: Product[] = allEffective.map((p) => ({
-        id: p.id,
-        name: p.name,
-        sku: String(p.id),
-        price: p.price || 0,
-        stock: p.inStock ? 25 : 0,
-        category: p.category || 'Máy bơm',
-        brand: p.name.includes('DONGYIN') ? 'DONGYIN' : 'VOLTOR',
-        is_featured: false,
-        is_bestseller: false,
-        is_new: false,
-        image: p.image || '/dongyin-images/sd_pump_4sdm.jpg',
-      }));
-
-      setProducts(realProducts);
-      setFilteredProducts(realProducts);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      toast.error('Không thể tải danh sách sản phẩm');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const filterProducts = () => {
+  const filteredProducts = useMemo(() => {
     let filtered = [...products];
-
-    // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(
         (p) =>
@@ -124,25 +92,17 @@ export function AdminProductsPage() {
           p.brand.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    // Filter by category
     if (selectedCategory !== 'all') {
       filtered = filtered.filter((p) => p.category === selectedCategory);
     }
-
-    setFilteredProducts(filtered);
-  };
+    return filtered;
+  }, [searchQuery, selectedCategory, products]);
 
   const handleDeleteProduct = async () => {
     if (!productToDelete) return;
 
     try {
-      // Permanently remove from product storage
       deleteProduct(productToDelete.id);
-
-      // Update local state
-      setProducts((prev) => prev.filter((p) => String(p.id) !== String(productToDelete.id)));
-
       addAuditLog(
         'DELETE',
         `Xóa sản phẩm: ${productToDelete.name}`,
@@ -164,14 +124,6 @@ export function AdminProductsPage() {
   const handleViewProduct = (product: Product) => {
     window.open(`/products/${product.id}`, '_blank');
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

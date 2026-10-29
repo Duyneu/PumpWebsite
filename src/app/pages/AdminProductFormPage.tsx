@@ -26,12 +26,41 @@ import { products, mainCategories } from '../data/products';
 import { addAuditLog } from '../utils/auditLog';
 import { getProductById, saveProduct } from '../utils/productStorage';
 
+export interface ProductFormData {
+  name: string;
+  slug: string;
+  sku: string;
+  category: string;
+  price: string;
+  original_price: string;
+  discount_percent: string;
+  short_description: string;
+  description: string;
+  brand: string;
+  model: string;
+  origin: string;
+  warranty: string;
+  image: string;
+  stock: string;
+  is_featured: boolean;
+  is_bestseller: boolean;
+  is_new: boolean;
+  power_hp: string;
+  power_kw: string;
+  voltage: string;
+  outlet_diameter: string;
+  flow_rate: string;
+  head_max: string;
+  material: string;
+  series: string;
+}
+
 export function AdminProductFormPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEdit = !!id;
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     slug: '',
     sku: '',

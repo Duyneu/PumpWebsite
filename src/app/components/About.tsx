@@ -19,7 +19,7 @@ import {
   Check
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getEffectiveProducts } from '../utils/productStorage';
+import { useProducts } from '../hooks/useProducts';
 
 // Import local photos
 import teamMeetingImg from 'figma:asset/eef97558f9b042891acd67c365ea4fdcf41063d1.png';
@@ -28,17 +28,8 @@ import productImg from 'figma:asset/356ae43299b08c7237e653e31b12c9b0c6d54f2c.png
 
 export function About() {
   const navigate = useNavigate();
-  const [productCount, setProductCount] = useState(() => getEffectiveProducts().length);
-
-  useEffect(() => {
-    const handleProductsChange = () => {
-      setProductCount(getEffectiveProducts().length);
-    };
-    window.addEventListener('voltor_products_changed', handleProductsChange);
-    return () => {
-      window.removeEventListener('voltor_products_changed', handleProductsChange);
-    };
-  }, []);
+  const products = useProducts();
+  const productCount = products.length;
 
   const values = [
     {

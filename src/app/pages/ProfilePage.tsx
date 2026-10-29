@@ -16,13 +16,6 @@ export function ProfilePage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!isLoggedIn) {
-      navigate('/login', { replace: true });
-    }
-  }, [isLoggedIn, navigate]);
-
   // Load user data
   useEffect(() => {
     if (user) {

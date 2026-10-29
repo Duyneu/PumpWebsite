@@ -6,7 +6,7 @@ import { CategorySidebar } from './CategorySidebar';
 import { useState, useEffect, useMemo } from 'react';
 import { mainCategories } from '../data/products';
 import { LazyImage } from './LazyImage';
-import { getEffectiveProducts } from '../utils/productStorage';
+import { useProducts } from '../hooks/useProducts';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'sonner';
 
@@ -19,22 +19,11 @@ interface ProductGridProps {
 
 export function ProductGrid({ onProductClick, limit, initialCategory, initialSearch }: ProductGridProps) {
   const { addToCart } = useCart();
+  const allProducts = useProducts();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchFilter, setSearchFilter] = useState<string>(initialSearch || '');
   const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc' | 'name-asc'>('default');
-  const [allProducts, setAllProducts] = useState<Product[]>(() => getEffectiveProducts());
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
-
-  // Listen to product changes (adds, edits, deletes)
-  useEffect(() => {
-    const handleProductsChange = () => {
-      setAllProducts(getEffectiveProducts());
-    };
-    window.addEventListener('voltor_products_changed', handleProductsChange);
-    return () => {
-      window.removeEventListener('voltor_products_changed', handleProductsChange);
-    };
-  }, []);
   
   // Set initial category from URL param
   useEffect(() => {

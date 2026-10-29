@@ -22,7 +22,7 @@ import {
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { mainCategories } from '../data/products';
-import { getEffectiveProducts } from '../utils/productStorage';
+import { useProducts } from '../hooks/useProducts';
 import { getAuditLogs, clearAuditLogs, AuditLogItem } from '../utils/auditLog';
 import { AdminAccountModal } from '../components/AdminAccountModal';
 import { getCurrentAdmin } from '../utils/adminAuth';
@@ -38,8 +38,9 @@ import {
 
 export function AdminDashboard() {
   const navigate = useNavigate();
+  const products = useProducts();
+  const totalProductsCount = products.length;
 
-  const [totalProductsCount, setTotalProductsCount] = useState(() => getEffectiveProducts().length);
   const [logs, setLogs] = useState<AuditLogItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderSearch, setOrderSearch] = useState('');
@@ -49,7 +50,6 @@ export function AdminDashboard() {
 
   const reloadData = () => {
     try {
-      setTotalProductsCount(getEffectiveProducts().length);
       setLogs(getAuditLogs());
       setOrders(getOrders());
     } catch (e) {
@@ -59,14 +59,6 @@ export function AdminDashboard() {
 
   useEffect(() => {
     reloadData();
-
-    const handleProductsChange = () => {
-      setTotalProductsCount(getEffectiveProducts().length);
-    };
-    window.addEventListener('voltor_products_changed', handleProductsChange);
-    return () => {
-      window.removeEventListener('voltor_products_changed', handleProductsChange);
-    };
   }, []);
 
   const pendingOrdersCount = orders.filter(o => o.status === 'pending').length;
