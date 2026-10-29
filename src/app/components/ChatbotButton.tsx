@@ -39,11 +39,11 @@ export function ChatbotButton({ isOpen, onClick, hasNotification }: ChatbotButto
         
         {/* Tooltip */}
         {!isOpen && (
-          <span className={`absolute left-full ml-3 px-3 py-2 bg-foreground text-background text-sm font-medium rounded-lg whitespace-nowrap shadow-lg transition-all duration-300 pointer-events-none ${
-            hoveredButton === 'ai' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
+          <span className={`absolute right-full mr-3 px-3 py-2 bg-foreground text-background text-sm font-medium rounded-lg whitespace-nowrap shadow-lg transition-all duration-300 pointer-events-none ${
+            hoveredButton === 'ai' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
           }`}>
             Tư vấn với AI
-            <span className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-foreground rotate-45" />
+            <span className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-2 h-2 bg-foreground rotate-45" />
           </span>
         )}
       </button>
@@ -68,11 +68,11 @@ export function ChatbotButton({ isOpen, onClick, hasNotification }: ChatbotButto
         </svg>
 
         {/* Tooltip */}
-        <span className={`absolute left-full ml-3 px-3 py-2 bg-foreground text-background text-sm font-medium rounded-lg whitespace-nowrap shadow-lg transition-all duration-300 pointer-events-none ${
-          hoveredButton === 'messenger' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
+        <span className={`absolute right-full mr-3 px-3 py-2 bg-foreground text-background text-sm font-medium rounded-lg whitespace-nowrap shadow-lg transition-all duration-300 pointer-events-none ${
+          hoveredButton === 'messenger' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
         }`}>
           Chat qua Messenger
-          <span className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-foreground rotate-45" />
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-2 h-2 bg-foreground rotate-45" />
         </span>
       </a>
 
@@ -98,11 +98,11 @@ export function ChatbotButton({ isOpen, onClick, hasNotification }: ChatbotButto
         </svg>
 
         {/* Tooltip */}
-        <span className={`absolute left-full ml-3 px-3 py-2 bg-foreground text-background text-sm font-medium rounded-lg whitespace-nowrap shadow-lg transition-all duration-300 pointer-events-none ${
-          hoveredButton === 'zalo' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
+        <span className={`absolute right-full mr-3 px-3 py-2 bg-foreground text-background text-sm font-medium rounded-lg whitespace-nowrap shadow-lg transition-all duration-300 pointer-events-none ${
+          hoveredButton === 'zalo' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
         }`}>
           Chat qua Zalo
-          <span className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-foreground rotate-45" />
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-2 h-2 bg-foreground rotate-45" />
         </span>
       </a>
     </div>

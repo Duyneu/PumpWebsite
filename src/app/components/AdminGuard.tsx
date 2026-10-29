@@ -16,20 +16,30 @@ export function AdminGuard({ children }: AdminGuardProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password) {
       setError('Vui lòng nhập đầy đủ Email và Mật khẩu!');
       return;
     }
 
-    const verified = verifyAdminLogin(email, password);
-    if (verified) {
-      setCurrentAdminState(verified);
-      setError('');
-    } else {
-      setError('Email hoặc mật khẩu quản trị không chính xác!');
+    setLoading(true);
+    setError('');
+
+    try {
+      const verified = await verifyAdminLogin(email, password);
+      if (verified) {
+        setCurrentAdminState(verified);
+        setError('');
+      } else {
+        setError('Email hoặc mật khẩu quản trị không chính xác!');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Lỗi đăng nhập vào hệ thống!');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,8 +102,9 @@ export function AdminGuard({ children }: AdminGuardProps) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-400 hover:text-gray-600 absolute right-3 top-1/2 -translate-y-1/2 p-1"
-                  tabIndex={-1}
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  className="text-gray-400 hover:text-gray-600 focus:text-blue-600 focus:outline-none absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -108,9 +119,20 @@ export function AdminGuard({ children }: AdminGuardProps) {
 
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 font-semibold text-sm shadow-md mt-2"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-2.5 font-semibold text-sm shadow-md mt-2 flex items-center justify-center gap-2"
             >
-              Đăng nhập vào Admin <ArrowRight className="w-4 h-4 ml-1.5" />
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Đang xác thực...</span>
+                </>
+              ) : (
+                <>
+                  <span>Đăng nhập vào Admin</span>
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                </>
+              )}
             </Button>
           </form>
 

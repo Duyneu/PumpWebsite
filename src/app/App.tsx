@@ -12,6 +12,7 @@ const CartPage = lazy(() => import('./pages/CartPage').then(m => ({ default: m.C
 const ContactPage = lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
 const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const AdminProductsPage = lazy(() => import('./pages/AdminProductsPage').then(m => ({ default: m.AdminProductsPage })));
 const AdminProductFormPage = lazy(() => import('./pages/AdminProductFormPage').then(m => ({ default: m.AdminProductFormPage })));
@@ -33,6 +34,7 @@ export default function App() {
               <Route path="contact" element={<ContactPage />} />
               <Route path="cart" element={<CartPage />} />
               <Route path="terms" element={<TermsPage />} />
+              <Route path="privacy" element={<PrivacyPage />} />
             </Route>
 
             {/* Admin Management Routes - Password Protected */}

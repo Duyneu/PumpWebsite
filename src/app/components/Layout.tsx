@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { ChatbotButton } from './ChatbotButton';
+import { BackToTop } from './BackToTop';
 import { PageTransition } from './PageTransition';
 import { useCart } from '../contexts/CartContext';
 import { Product } from '../types';
@@ -62,6 +63,9 @@ export function Layout() {
 
       {/* Toast Notification Provider */}
       <Toaster position="top-right" richColors />
+
+      {/* Back To Top Button */}
+      <BackToTop />
 
       {/* Chatbot Button */}
       <ChatbotButton

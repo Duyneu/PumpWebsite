@@ -25,7 +25,7 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
   // Calculate average rating
   const averageRating = reviews.length > 0
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-    : 5.0;
+    : 0;
 
   // Count ratings by star
   const ratingCounts = [5, 4, 3, 2, 1].map(star => ({
@@ -117,7 +117,7 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
 
   const renderStars = (count: number, interactive = false) => {
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1" role={interactive ? "radiogroup" : undefined} aria-label={interactive ? "Chọn số sao đánh giá" : undefined}>
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
@@ -126,6 +126,7 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
             onClick={() => interactive && setRating(star)}
             onMouseEnter={() => interactive && setHoveredRating(star)}
             onMouseLeave={() => interactive && setHoveredRating(0)}
+            aria-label={interactive ? `${star} sao - ${getRatingLabel(star)}` : `${star} sao`}
             className={`${interactive ? 'cursor-pointer hover:scale-125 transition-transform' : 'cursor-default'}`}
           >
             <Star
@@ -181,14 +182,16 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
         {/* Average Rating Box (5 cols) */}
         <div className="md:col-span-5 flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-slate-200 pb-6 md:pb-0 md:pr-6">
           <div className="text-5xl font-black text-gray-900 tracking-tight">
-            {reviews.length > 0 ? averageRating.toFixed(1) : '5.0'}
+            {reviews.length > 0 ? averageRating.toFixed(1) : '0.0'}
             <span className="text-2xl text-gray-400 font-normal">/5</span>
           </div>
           <div className="my-2.5">
-            {renderStars(Math.round(reviews.length > 0 ? averageRating : 5))}
+            {renderStars(Math.round(averageRating))}
           </div>
           <p className="text-xs text-gray-500 font-medium">
-            Dựa trên {reviews.length} lượt đánh giá thực tế
+            {reviews.length > 0
+              ? `Dựa trên ${reviews.length} lượt đánh giá thực tế`
+              : 'Chưa có lượt đánh giá nào'}
           </p>
         </div>
 

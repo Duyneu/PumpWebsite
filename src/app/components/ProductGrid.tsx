@@ -21,6 +21,7 @@ export function ProductGrid({ onProductClick, limit, initialCategory, initialSea
   const { addToCart } = useCart();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchFilter, setSearchFilter] = useState<string>(initialSearch || '');
+  const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc' | 'name-asc'>('default');
   const [allProducts, setAllProducts] = useState<Product[]>(() => getEffectiveProducts());
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
 
@@ -81,8 +82,17 @@ export function ProductGrid({ onProductClick, limit, initialCategory, initialSea
       );
     }
 
+    // Sort products
+    if (sortBy === 'price-asc') {
+      filtered = [...filtered].sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price-desc') {
+      filtered = [...filtered].sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'name-asc') {
+      filtered = [...filtered].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'vi'));
+    }
+
     return limit ? filtered.slice(0, limit) : filtered;
-  }, [selectedCategory, searchFilter, limit, allProducts]);
+  }, [selectedCategory, searchFilter, sortBy, limit, allProducts]);
 
   const isLimitedView = Boolean(limit && limit < allProducts.length);
 
@@ -162,13 +172,13 @@ export function ProductGrid({ onProductClick, limit, initialCategory, initialSea
           {selectedCategory && (
             <span className="bg-blue-600 text-white px-2.5 py-0.5 rounded-lg text-xs font-semibold flex items-center gap-1">
               Danh mục: {selectedCategory}
-              <button onClick={() => setSelectedCategory(null)} className="hover:text-red-200 ml-1">×</button>
+              <button onClick={() => setSelectedCategory(null)} aria-label="Xóa bộ lọc danh mục" className="hover:text-red-200 ml-1">×</button>
             </span>
           )}
           {searchFilter && (
             <span className="bg-cyan-700 text-white px-2.5 py-0.5 rounded-lg text-xs font-semibold flex items-center gap-1">
               Từ khóa: "{searchFilter}"
-              <button onClick={() => setSearchFilter('')} className="hover:text-red-200 ml-1">×</button>
+              <button onClick={() => setSearchFilter('')} aria-label="Xóa bộ lọc từ khóa" className="hover:text-red-200 ml-1">×</button>
             </span>
           )}
           <button 
@@ -211,6 +221,30 @@ export function ProductGrid({ onProductClick, limit, initialCategory, initialSea
             </div>
           ) : (
             <>
+              {/* Product List Toolbar: Count & Sort */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 bg-slate-50/80 p-3 rounded-xl border border-slate-200/70 text-xs">
+                <span className="text-slate-600 font-medium">
+                  Tìm thấy <strong className="text-slate-900">{displayProducts.length}</strong> sản phẩm
+                </span>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="product-sort-select" className="text-slate-600 font-medium whitespace-nowrap">
+                    Sắp xếp theo:
+                  </label>
+                  <select
+                    id="product-sort-select"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    aria-label="Sắp xếp danh sách sản phẩm"
+                    className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-xs"
+                  >
+                    <option value="default">Mặc định</option>
+                    <option value="price-asc">Giá: Thấp đến cao</option>
+                    <option value="price-desc">Giá: Cao đến thấp</option>
+                    <option value="name-asc">Tên: A - Z</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {displayProducts.map((product, index) => {
                   const isRecentlyAdded = addedIds[product.id];

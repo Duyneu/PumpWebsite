@@ -60,9 +60,51 @@ export function setCurrentAdmin(admin: AdminAccount | null) {
   }
 }
 
-export function verifyAdminLogin(email: string, pass: string): AdminAccount | null {
-  const accounts = getAdminAccounts();
+export async function verifyAdminLogin(email: string, pass: string): Promise<AdminAccount | null> {
   const trimmedEmail = email.trim().toLowerCase();
+
+  // 1. Authenticate with PostgreSQL Backend API
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: trimmedEmail, password: pass }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success && data.data?.user) {
+      const user = data.data.user;
+      if (user.role !== 'admin') {
+        throw new Error('Tài khoản này không có quyền quản trị viên!');
+      }
+
+      const adminUser: AdminAccount = {
+        id: String(user.id),
+        email: user.email,
+        name: user.name || user.email,
+        passwordHash: '',
+        createdAt: new Date().toLocaleDateString('vi-VN'),
+        isSuperAdmin: true,
+      };
+
+      if (data.data.token) {
+        localStorage.setItem('auth_token', data.data.token);
+      }
+      setCurrentAdmin(adminUser);
+      return adminUser;
+    } else if (res.status === 400 || res.status === 401) {
+      throw new Error(data.error?.message || data.message || 'Email hoặc mật khẩu không chính xác!');
+    }
+  } catch (err: any) {
+    if (err.message && !err.message.includes('fetch') && !err.message.includes('Failed to fetch')) {
+      throw err;
+    }
+    // Fallback to local accounts if backend is unreachable during local development
+  }
+
+  // 2. Local fallback
+  const accounts = getAdminAccounts();
   const found = accounts.find(a => a.email.toLowerCase() === trimmedEmail && a.passwordHash === pass);
   if (found) {
     setCurrentAdmin(found);

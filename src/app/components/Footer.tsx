@@ -30,6 +30,7 @@ export function Footer() {
                   href="https://www.facebook.com/profile.php?id=61576883068377"
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label="Trang Facebook VOLTOR Việt Nam"
                   className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors"
                 >
                   <Facebook className="w-5 h-5" />
@@ -39,6 +40,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={handleEmailClickWithCopy}
+                  aria-label="Gửi email qua Gmail tới voltorvietnam@gmail.com"
                   className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-red-600 transition-colors"
                   title="Gửi email qua Gmail (voltorvietnam@gmail.com)"
                 >
@@ -50,8 +52,9 @@ export function Footer() {
                   href="https://zalo.me/0898296336"
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label="Liên hệ qua Zalo VOLTOR (0898 296 336)"
                   className="footer-zalo-btn"
-                  title="Liên hệ qua Zalo"
+                  title="Liên hệ qua Zalo (0898 296 336)"
                 >
                   <div className="footer-zalo-circle"></div>
                   <div className="footer-zalo-circle-fill"></div>
@@ -101,6 +104,22 @@ export function Footer() {
                     className="hover:text-blue-400 transition-colors"
                   >
                     Liên hệ
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate('/terms')}
+                    className="hover:text-blue-400 transition-colors"
+                  >
+                    Điều khoản dịch vụ
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate('/privacy')}
+                    className="hover:text-blue-400 transition-colors"
+                  >
+                    Chính sách bảo mật
                   </button>
                 </li>
               </ul>
@@ -204,7 +223,22 @@ export function Footer() {
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-gray-500">
-            <p>© 2025 VOLTOR. Tất cả quyền được bảo lưu.</p>
+            <p>© {new Date().getFullYear()} VOLTOR Việt Nam. Tất cả quyền được bảo lưu.</p>
+            <div className="flex items-center gap-6 text-xs text-gray-400">
+              <button
+                onClick={() => navigate('/terms')}
+                className="hover:text-blue-400 transition-colors"
+              >
+                Điều khoản dịch vụ
+              </button>
+              <span>•</span>
+              <button
+                onClick={() => navigate('/privacy')}
+                className="hover:text-blue-400 transition-colors"
+              >
+                Chính sách bảo mật
+              </button>
+            </div>
           </div>
         </div>
       </footer>
