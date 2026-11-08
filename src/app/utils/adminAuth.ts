@@ -10,24 +10,8 @@ export interface AdminAccount {
 const STORAGE_KEY = 'voltor_admin_accounts';
 const SESSION_KEY = 'voltor_current_admin';
 
-// Tài khoản mặc định ban đầu
+// Tài khoản mặc định ban đầu (Chỉ giữ lại duy nhất Root Admin chính chủ)
 const DEFAULT_ADMINS: AdminAccount[] = [
-  {
-    id: 'admin_voltor',
-    email: 'voltorvietnam@gmail.com',
-    name: 'VOLTOR Quản Trị',
-    passwordHash: 'password123',
-    createdAt: '29/10/2026',
-    isSuperAdmin: true,
-  },
-  {
-    id: 'admin_voltor_alt',
-    email: 'admin@voltor.com',
-    name: 'Admin VOLTOR',
-    passwordHash: 'password123',
-    createdAt: '29/10/2026',
-    isSuperAdmin: true,
-  },
   {
     id: 'admin_root',
     email: 'huuduy0811@gmail.com',
@@ -38,6 +22,8 @@ const DEFAULT_ADMINS: AdminAccount[] = [
   },
 ];
 
+const OBSOLETE_ADMIN_EMAILS = ['voltorvietnam@gmail.com', 'admin@voltor.com'];
+
 export function getAdminAccounts(): AdminAccount[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -45,8 +31,15 @@ export function getAdminAccounts(): AdminAccount[] {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_ADMINS));
       return DEFAULT_ADMINS;
     }
-    const accounts: AdminAccount[] = JSON.parse(raw);
-    let updated = false;
+    let accounts: AdminAccount[] = JSON.parse(raw);
+
+    // Tự động thanh lọc các tài khoản admin cũ đã bị bãi bỏ
+    const filtered = accounts.filter(
+      a => !OBSOLETE_ADMIN_EMAILS.includes(a.email.toLowerCase())
+    );
+    let updated = filtered.length !== accounts.length;
+    accounts = filtered;
+
     for (const def of DEFAULT_ADMINS) {
       if (!accounts.some(a => a.email.toLowerCase() === def.email.toLowerCase())) {
         accounts.push(def);
@@ -66,7 +59,12 @@ export function getCurrentAdmin(): AdminAccount | null {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const admin: AdminAccount = JSON.parse(raw);
+    if (OBSOLETE_ADMIN_EMAILS.includes(admin.email.toLowerCase())) {
+      setCurrentAdmin(null);
+      return null;
+    }
+    return admin;
   } catch {
     return null;
   }

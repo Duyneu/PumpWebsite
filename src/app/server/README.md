@@ -238,8 +238,8 @@ curl -X POST http://localhost:3001/api/auth/login \
 
 **Admin Account:**
 ```
-Email: admin@voltor.com
-Password: password123
+Email: huuduy0811@gmail.com
+Password: password123 (hoặc Huuduy0911@)
 ```
 
 **User Account:**
