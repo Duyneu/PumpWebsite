@@ -86,6 +86,16 @@ export function AdminProductsPage() {
   const [bulkValue, setBulkValue] = useState('VOLTOR');
   const [bulkApplying, setBulkApplying] = useState(false);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+
+  const fieldLabelMap: Record<string, string> = {
+    brand: 'Thương hiệu',
+    category: 'Danh mục',
+    price: 'Giá bán',
+    warranty: 'Thời hạn bảo hành',
+    origin: 'Xuất xứ',
+    stock: 'Tình trạng kho',
+  };
 
   const products: Product[] = useMemo(() => {
     return rawProducts.map((p) => ({
@@ -161,12 +171,13 @@ export function AdminProductsPage() {
 
       addAuditLog(
         'UPDATE',
-        `Sửa hàng loạt cột [${bulkField}] cho ${selectedIds.size} sản phẩm`,
+        `Sửa hàng loạt cột [${fieldLabelMap[bulkField] || bulkField}] cho ${selectedIds.size} sản phẩm`,
         `Giá trị mới: ${bulkValue}`
       );
 
-      toast.success(`Đã cập nhật cột "${bulkField}" cho ${selectedIds.size} sản phẩm!`);
+      toast.success(`Đã cập nhật cột "${fieldLabelMap[bulkField] || bulkField}" cho ${selectedIds.size} sản phẩm!`);
       setSelectedIds(new Set());
+      setBulkConfirmOpen(false);
       setBulkEditOpen(false);
     } catch (err) {
       toast.error('Có lỗi xảy ra khi cập nhật hàng loạt!');
@@ -446,8 +457,7 @@ export function AdminProductsPage() {
       <Dialog open={bulkEditOpen} onOpenChange={setBulkEditOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg">
-              <Edit3 className="w-5 h-5 text-blue-600" />
+            <DialogTitle className="text-lg">
               Sửa hàng loạt ({selectedIds.size} sản phẩm)
             </DialogTitle>
             <DialogDescription>
@@ -473,12 +483,12 @@ export function AdminProductsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="brand">🏷️ Thương hiệu (Brand)</SelectItem>
-                  <SelectItem value="category">📂 Danh mục (Category)</SelectItem>
-                  <SelectItem value="price">💰 Giá bán (Price)</SelectItem>
-                  <SelectItem value="warranty">🛡️ Thời hạn bảo hành (Warranty)</SelectItem>
-                  <SelectItem value="origin">🌏 Xuất xứ (Origin)</SelectItem>
-                  <SelectItem value="stock">📦 Tình trạng kho (Stock)</SelectItem>
+                  <SelectItem value="brand">Thương hiệu</SelectItem>
+                  <SelectItem value="category">Danh mục</SelectItem>
+                  <SelectItem value="price">Giá bán</SelectItem>
+                  <SelectItem value="warranty">Thời hạn bảo hành</SelectItem>
+                  <SelectItem value="origin">Xuất xứ</SelectItem>
+                  <SelectItem value="stock">Tình trạng kho</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -583,30 +593,66 @@ export function AdminProductsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="in_stock">✅ Còn hàng (Stock: 25)</SelectItem>
-                    <SelectItem value="out_of_stock">❌ Hết hàng (Stock: 0)</SelectItem>
+                    <SelectItem value="in_stock">Còn hàng (Stock: 25)</SelectItem>
+                    <SelectItem value="out_of_stock">Hết hàng (Stock: 0)</SelectItem>
                   </SelectContent>
                 </Select>
               )}
             </div>
 
             <div className="p-3 bg-blue-50/60 border border-blue-200 rounded-xl text-xs text-blue-900">
-              ⚡ Sẽ cập nhật cột <strong>{bulkField}</strong> thành <strong>"{bulkValue || '(trống)'}"</strong> cho tất cả <strong>{selectedIds.size} sản phẩm</strong> đã chọn và tự động đồng bộ lên Cloudflare D1.
+              Sẽ cập nhật cột <strong>{fieldLabelMap[bulkField] || bulkField}</strong> thành <strong>"{bulkField === 'stock' ? (bulkValue === 'in_stock' ? 'Còn hàng' : 'Hết hàng') : (bulkValue || '(trống)')}"</strong> cho tất cả <strong>{selectedIds.size} sản phẩm</strong> đã chọn và tự động đồng bộ lên Cloudflare D1.
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setBulkEditOpen(false)}>Hủy</Button>
             <Button
-              onClick={handleApplyBulkEdit}
+              onClick={() => {
+                if (!bulkValue && bulkField !== 'brand') {
+                  toast.error('Vui lòng nhập hoặc chọn giá trị');
+                  return;
+                }
+                setBulkConfirmOpen(true);
+              }}
               disabled={bulkApplying || !bulkValue}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
             >
-              {bulkApplying ? 'Đang cập nhật...' : `Cập nhật ${selectedIds.size} sản phẩm`}
+              Lưu thay đổi
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Edit Confirmation Dialog */}
+      <AlertDialog open={bulkConfirmOpen} onOpenChange={setBulkConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận sửa hàng loạt</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2 text-sm text-gray-600">
+              <span className="block">
+                Bạn có chắc chắn muốn sửa cột <strong>{fieldLabelMap[bulkField] || bulkField}</strong> thành <strong>"{bulkField === 'stock' ? (bulkValue === 'in_stock' ? 'Còn hàng' : 'Hết hàng') : (bulkValue || '(trống)')}"</strong> cho <strong>{selectedIds.size} sản phẩm</strong> đã chọn?
+              </span>
+              <span className="block text-xs text-amber-700 font-medium">
+                Dữ liệu sẽ được cập nhật đồng loạt trên hệ thống và đồng bộ lên Cloudflare D1.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkApplying}>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleApplyBulkEdit();
+              }}
+              disabled={bulkApplying}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+            >
+              {bulkApplying ? 'Đang cập nhật...' : 'Chắc chắn sửa'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Bulk Delete Confirmation Dialog */}
       <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
