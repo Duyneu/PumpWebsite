@@ -24,22 +24,17 @@ export function Chatbot({ onClose, onProductClick }: ChatbotProps) {
   return (
     <div className="flex flex-col h-full bg-white rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden font-sans">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-650 to-blue-700 text-white px-4 py-3.5 flex items-center justify-between border-b border-blue-500/30">
+      <div className="bg-blue-700 text-white px-4 py-3.5 flex items-center justify-between border-b border-blue-600/50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/15 backdrop-blur-xs rounded-full flex items-center justify-center relative border border-white/20 shadow-xs">
+          <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center border border-white/20 shadow-xs">
             <Bot className="w-5 h-5 text-white" />
-            <Sparkles className="w-3 h-3 text-amber-300 absolute -top-0.5 -right-0.5 animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm sm:text-base text-white tracking-tight">Trợ lý AI VOLTOR</span>
-              <span className="text-[10px] bg-white/20 text-blue-50 px-2 py-0.5 rounded-full font-medium flex items-center gap-1 border border-white/20">
-                <Sparkles className="w-2.5 h-2.5 text-amber-300" />
-                Gemini AI
-              </span>
+              <span className="font-semibold text-sm sm:text-base text-white tracking-tight">Trợ lý kỹ thuật VOLTOR</span>
             </div>
             <div className="text-[11px] text-blue-100 flex items-center gap-1.5 mt-0.5">
-              <span className="w-2 h-2 bg-emerald-400 rounded-full inline-block animate-pulse" />
+              <span className="w-2 h-2 bg-emerald-400 rounded-full inline-block" />
               <span>Tư vấn kỹ thuật 24/7 • Hotline: 0898 296 336</span>
             </div>
           </div>
@@ -135,8 +130,8 @@ export function Chatbot({ onClose, onProductClick }: ChatbotProps) {
                         <div className="text-xs font-semibold text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
                           {product.name}
                         </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">{product.category}</div>
-                        <div className="text-xs font-bold text-blue-600 mt-0.5">{formatPrice(product.price)}</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">{product.category}</div>
+                        <div className="text-xs font-bold text-blue-700 mt-0.5 tabular-nums">{formatPrice(product.price)}</div>
                       </div>
                       <div className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity pr-1 text-xs font-medium flex items-center gap-0.5">
                         <span>Xem</span>

@@ -102,7 +102,7 @@ export function AdminDashboard() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                 <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
                   Trung tâm quản trị
                 </span>

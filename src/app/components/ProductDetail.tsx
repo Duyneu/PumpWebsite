@@ -44,11 +44,11 @@ export function ProductDetail({ product, onAddToCart, onBack }: ProductDetailPro
 
         <div className="grid md:grid-cols-2 gap-12">
           {/* Product Image */}
-          <div className="bg-gray-100 rounded-2xl overflow-hidden">
+          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl overflow-hidden aspect-square flex items-center justify-center p-6 sm:p-10">
             <ImageWithFallback
               src={product.image}
               alt={product.name}
-              className="w-full h-full object-cover aspect-square"
+              className="max-h-full max-w-full object-contain"
               decoding="async"
             />
           </div>
@@ -59,10 +59,10 @@ export function ProductDetail({ product, onAddToCart, onBack }: ProductDetailPro
             <h1 className="mb-4">{product.name}</h1>
             
             <div className="flex items-baseline gap-3 mb-6">
-              <div className="text-blue-600">{formatPrice(product.price)}</div>
+              <div className="text-blue-700 font-extrabold text-2xl tabular-nums">{formatPrice(product.price)}</div>
               {product.inStock && (
-                <span className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full flex items-center gap-1">
-                  <Check className="w-4 h-4" />
+                <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1 font-semibold">
+                  <Check className="w-4 h-4 text-emerald-600" />
                   Còn hàng
                 </span>
               )}

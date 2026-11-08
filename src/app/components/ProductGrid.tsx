@@ -107,10 +107,10 @@ export function ProductGrid({ onProductClick, limit, initialCategory, initialSea
 
   const homeCategoryTabs = [
     { label: 'Tất cả sản phẩm', value: null },
-    { label: '🔥 Hỏa tiễn giếng khoan', value: 'Máy bơm hỏa tiễn' },
-    { label: '🌊 Bơm điện chìm', value: 'Máy bơm điện chìm' },
-    { label: '⚙️ Bơm ly tâm', value: 'Máy bơm ly tâm' },
-    { label: '⚡ Bơm tăng áp', value: 'Máy bơm tăng áp' },
+    { label: 'Hỏa tiễn giếng khoan', value: 'Máy bơm hỏa tiễn' },
+    { label: 'Bơm điện chìm', value: 'Máy bơm điện chìm' },
+    { label: 'Bơm ly tâm', value: 'Máy bơm ly tâm' },
+    { label: 'Bơm tăng áp', value: 'Máy bơm tăng áp' },
   ];
 
   return (
@@ -291,27 +291,27 @@ export function ProductGrid({ onProductClick, limit, initialCategory, initialSea
                         {/* Specs & Pricing & Actions */}
                         <div className="mt-4 pt-3 border-t border-slate-100">
                           {/* Specs Grid */}
-                          <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 mb-3 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                          <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700 mb-3 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
                             <div>
-                              <span className="text-slate-400">Công suất:</span>{' '}
-                              <strong className="text-slate-800">{product.specs.power || 'Chuẩn'}</strong>
+                              <span className="text-slate-500">Công suất:</span>{' '}
+                              <strong className="text-slate-800 tabular-nums">{product.specs.power || 'Chuẩn'}</strong>
                             </div>
                             <div>
-                              <span className="text-slate-400">Lưu lượng:</span>{' '}
-                              <strong className="text-slate-800">{product.specs.flow || 'Tiêu chuẩn'}</strong>
+                              <span className="text-slate-500">Lưu lượng:</span>{' '}
+                              <strong className="text-slate-800 tabular-nums">{product.specs.flow || 'Tiêu chuẩn'}</strong>
                             </div>
                             {product.specs.head && (
                               <div className="col-span-2">
-                                <span className="text-slate-400">Cột áp:</span>{' '}
-                                <strong className="text-blue-700">{product.specs.head}</strong>
+                                <span className="text-slate-500">Cột áp:</span>{' '}
+                                <strong className="text-blue-700 tabular-nums">{product.specs.head}</strong>
                               </div>
                             )}
                           </div>
 
                           {/* Price */}
                           <div className="flex items-baseline justify-between mb-3">
-                            <span className="text-xs text-slate-400">Giá bán:</span>
-                            <div className="text-blue-700 font-extrabold text-lg">
+                            <span className="text-xs text-slate-600 font-medium">Giá bán:</span>
+                            <div className="text-blue-700 font-extrabold text-lg tabular-nums">
                               {formatPrice(product.price)}
                             </div>
                           </div>
@@ -320,10 +320,10 @@ export function ProductGrid({ onProductClick, limit, initialCategory, initialSea
                           <div className="grid grid-cols-2 gap-2">
                             <button
                               onClick={(e) => handleAddToCart(e, product)}
-                              className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+                              className={`py-2 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
                                 isRecentlyAdded
                                   ? 'bg-emerald-600 text-white'
-                                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow'
+                                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs'
                               }`}
                             >
                               {isRecentlyAdded ? (
@@ -344,7 +344,7 @@ export function ProductGrid({ onProductClick, limit, initialCategory, initialSea
                                 e.stopPropagation();
                                 onProductClick(product);
                               }}
-                              className="py-2 px-3 rounded-xl font-semibold text-xs border border-slate-300 hover:border-blue-600 text-slate-700 hover:text-blue-600 bg-white hover:bg-blue-50/50 transition-colors flex items-center justify-center gap-1.5"
+                              className="py-2 px-3 rounded-lg font-semibold text-xs border border-slate-300 hover:border-blue-600 text-slate-700 hover:text-blue-600 bg-white hover:bg-blue-50/50 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                             >
                               <Eye className="w-4 h-4" />
                               <span>Chi tiết</span>

@@ -408,38 +408,40 @@ export function Cart({
                       {item.name}
                     </h3>
 
-                    <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
-                      <span className="text-slate-400">Đơn giá:</span>
-                      <strong className="text-slate-700 font-semibold">{formatPrice(item.price)}</strong>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-slate-600">
+                      <span className="text-slate-500">Đơn giá:</span>
+                      <strong className="text-slate-800 font-semibold tabular-nums">{formatPrice(item.price)}</strong>
                     </div>
                   </div>
 
                   {/* Quantity Stepper & Line Subtotal */}
                   <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
-                    <div className="flex items-center border border-slate-300 rounded-xl bg-white shadow-sm overflow-hidden">
+                    <div className="flex items-center border border-slate-300 rounded-lg bg-white shadow-xs overflow-hidden">
                       <button
                         onClick={() => onUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
                         disabled={item.quantity <= 1}
-                        className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-slate-600"
+                        className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-slate-600 cursor-pointer"
                         title="Giảm 1"
+                        aria-label="Giảm số lượng đi 1"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <span className="w-10 text-center font-bold text-sm text-slate-800">
+                      <span className="w-10 text-center font-bold text-sm text-slate-800 tabular-nums">
                         {item.quantity}
                       </span>
                       <button
                         onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                        className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-600"
+                        className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-600 cursor-pointer"
                         title="Tăng 1"
+                        aria-label="Tăng số lượng lên 1"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
 
                     <div className="text-right">
-                      <div className="text-[11px] text-slate-400">Thành tiền:</div>
-                      <div className="text-base font-extrabold text-blue-700">
+                      <div className="text-[11px] text-slate-500">Thành tiền:</div>
+                      <div className="text-base font-extrabold text-blue-700 tabular-nums">
                         {formatPrice(item.price * item.quantity)}
                       </div>
                     </div>
@@ -516,7 +518,7 @@ export function Cart({
               <div className="space-y-3 pt-2 text-sm border-t border-slate-100">
                 <div className="flex justify-between text-slate-600">
                   <span>Tạm tính ({totalQuantity} sản phẩm):</span>
-                  <span className="font-semibold text-slate-900">{formatPrice(subtotal)}</span>
+                  <span className="font-semibold text-slate-900 tabular-nums">{formatPrice(subtotal)}</span>
                 </div>
 
                 <div className="flex justify-between text-slate-600">
@@ -524,20 +526,20 @@ export function Cart({
                     Phí vận chuyển:
                   </span>
                   {shipping === 0 ? (
-                    <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded text-xs">
+                    <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded text-xs border border-emerald-200">
                       Miễn phí
                     </span>
                   ) : (
-                    <span className="font-semibold text-slate-900">{formatPrice(shipping)}</span>
+                    <span className="font-semibold text-slate-900 tabular-nums">{formatPrice(shipping)}</span>
                   )}
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 flex items-baseline justify-between">
                   <div>
                     <div className="text-base font-bold text-slate-900">Tổng thanh toán:</div>
-                    <div className="text-[11px] text-slate-400">Thanh toán khi nhận hàng (COD) hoặc chuyển khoản</div>
+                    <div className="text-[11px] text-slate-500">Thanh toán khi nhận hàng (COD) hoặc chuyển khoản</div>
                   </div>
-                  <div className="text-2xl font-black text-blue-700 tracking-tight">
+                  <div className="text-2xl font-black text-blue-700 tracking-tight tabular-nums">
                     {formatPrice(total)}
                   </div>
                 </div>

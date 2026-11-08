@@ -154,7 +154,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
       {/* Floating admin user bar */}
       <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 bg-slate-900/95 backdrop-blur-md text-white text-xs px-4 py-2 rounded-full shadow-2xl border border-slate-700">
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
           <span className="font-semibold text-gray-200">{currentAdmin.name || currentAdmin.email}</span>
         </div>
         <div className="h-3 w-px bg-slate-700 mx-1"></div>

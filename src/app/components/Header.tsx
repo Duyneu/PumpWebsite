@@ -38,7 +38,7 @@ export function Header({ currentPage, onNavigate, cartItemCount }: HeaderProps) 
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 text-cyan-400 font-semibold">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
               VOLTOR
             </span>
             <span className="text-slate-400">|</span>
@@ -149,7 +149,7 @@ export function Header({ currentPage, onNavigate, cartItemCount }: HeaderProps) 
             >
               <ShoppingCart className="w-5 h-5 text-slate-700" />
               {cartItemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-red-600 text-white text-[11px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md animate-bounce">
+                <span className="absolute -top-0.5 -right-0.5 bg-red-600 text-white text-[11px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-xs">
                   {cartItemCount}
                 </span>
               )}
