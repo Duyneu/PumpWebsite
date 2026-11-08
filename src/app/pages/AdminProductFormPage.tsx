@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { products, mainCategories } from '../data/products';
 import { addAuditLog } from '../utils/auditLog';
 import { getProductById, saveProduct } from '../utils/productStorage';
+import { invalidateProductsCache } from '../hooks/useProducts';
 
 export interface ProductFormData {
   name: string;
@@ -279,6 +280,7 @@ export function AdminProductFormPage() {
       };
 
       saveProduct(newProduct, Boolean(isEdit));
+      invalidateProductsCache();
 
       if (isEdit) {
         addAuditLog('UPDATE', `Chỉnh sửa sản phẩm: ${formData.name}`, `Giá: ${formData.price}đ | Danh mục: ${formData.category}`);

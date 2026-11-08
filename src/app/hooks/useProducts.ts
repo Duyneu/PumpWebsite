@@ -5,6 +5,15 @@ import { Product } from '../types';
 let cachedProducts: Product[] | null = null;
 let initializedSync = false;
 
+// Global listener: always keep cachedProducts fresh even when components are unmounted (e.g. during navigation)
+if (typeof window !== 'undefined') {
+  const refreshCache = () => {
+    cachedProducts = getEffectiveProducts();
+  };
+  window.addEventListener('voltor_products_changed', refreshCache);
+  window.addEventListener('storage', refreshCache);
+}
+
 function getCachedProducts(): Product[] {
   if (!initializedSync && typeof window !== 'undefined') {
     initializedSync = true;
