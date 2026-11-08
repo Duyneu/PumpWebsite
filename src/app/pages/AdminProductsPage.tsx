@@ -191,7 +191,7 @@ export function AdminProductsPage() {
 
     try {
       const count = selectedIds.size;
-      batchDeleteProducts(Array.from(selectedIds));
+      await batchDeleteProducts(Array.from(selectedIds));
       invalidateProductsCache();
 
       addAuditLog('DELETE', `Xóa hàng loạt: ${count} sản phẩm`, 'Đã xóa vĩnh viễn khỏi hệ thống');

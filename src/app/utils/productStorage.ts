@@ -229,7 +229,7 @@ export function saveProduct(product: Product, isEdit = false): void {
 /**
  * Bulk updates multiple products across a column (brand, category, price, etc.)
  */
-export function batchUpdateProducts(ids: (string | number)[], updates: Partial<Product>): void {
+export async function batchUpdateProducts(ids: (string | number)[], updates: Partial<Product>): Promise<boolean> {
   const strIds = ids.map(String);
   try {
     const updatedRaw = localStorage.getItem(STORAGE_KEYS.UPDATED);
@@ -261,20 +261,22 @@ export function batchUpdateProducts(ids: (string | number)[], updates: Partial<P
     window.dispatchEvent(new CustomEvent('voltor_products_changed', { detail: { action: 'batch-update', ids: strIds, updates } }));
 
     // Send batch update to Cloudflare D1
-    fetch('/api/products/batch-update', {
+    const res = await fetch('/api/products/batch-update', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: strIds, updates }),
-    }).catch(err => console.warn('[D1 Sync] Batch update failed:', err));
+    });
+    return res.ok;
   } catch (err) {
     console.error('Error in batchUpdateProducts:', err);
+    return false;
   }
 }
 
 /**
  * Bulk deletes multiple products by IDs.
  */
-export function batchDeleteProducts(ids: (string | number)[]): void {
+export async function batchDeleteProducts(ids: (string | number)[]): Promise<boolean> {
   const strIds = ids.map(String);
   try {
     const deletedRaw = localStorage.getItem(STORAGE_KEYS.DELETED);
@@ -298,13 +300,15 @@ export function batchDeleteProducts(ids: (string | number)[]): void {
     window.dispatchEvent(new CustomEvent('voltor_products_changed', { detail: { action: 'batch-delete', ids: strIds } }));
 
     // Send batch delete to Cloudflare D1
-    fetch('/api/products/batch-delete', {
+    const res = await fetch('/api/products/batch-delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: strIds }),
-    }).catch(err => console.warn('[D1 Sync] Batch delete failed:', err));
+    });
+    return res.ok;
   } catch (err) {
     console.error('Error in batchDeleteProducts:', err);
+    return false;
   }
 }
 
