@@ -4,18 +4,20 @@
 
 import { db } from '../data/database';
 
-export async function handleApiRequest(path: string, method: string, body?: any) {
-  console.log(`[API] ${method} ${path}`);
+export async function handleApiRequest(rawPath: string, method: string, body?: any) {
+  console.log(`[API] ${method} ${rawPath}`);
+  const [pathname, search] = rawPath.split('?');
+  const params = new URLSearchParams(search || '');
 
   // ==================== USERS ====================
   
-  if (path === '/api/users' && method === 'GET') {
+  if (pathname === '/api/users' && method === 'GET') {
     const users = await db.users.getAll();
     return { success: true, data: users };
   }
 
-  if (path.startsWith('/api/users/') && method === 'GET') {
-    const id = path.split('/').pop()!;
+  if (pathname.startsWith('/api/users/') && method === 'GET') {
+    const id = pathname.split('/').pop()!;
     const user = await db.users.getById(id);
     if (!user) {
       return { success: false, error: 'User not found' };
@@ -23,14 +25,14 @@ export async function handleApiRequest(path: string, method: string, body?: any)
     return { success: true, data: user };
   }
 
-  if (path === '/api/users' && method === 'POST') {
+  if (pathname === '/api/users' && method === 'POST') {
     // Create new user
     const user = await db.users.create(body);
     return { success: true, data: user };
   }
 
-  if (path.startsWith('/api/users/') && method === 'PUT') {
-    const id = path.split('/').pop()!;
+  if (pathname.startsWith('/api/users/') && method === 'PUT') {
+    const id = pathname.split('/').pop()!;
     const user = await db.users.update(id, body);
     if (!user) {
       return { success: false, error: 'User not found' };
@@ -38,15 +40,15 @@ export async function handleApiRequest(path: string, method: string, body?: any)
     return { success: true, data: user };
   }
 
-  if (path.startsWith('/api/users/') && method === 'DELETE') {
-    const id = path.split('/').pop()!;
+  if (pathname.startsWith('/api/users/') && method === 'DELETE') {
+    const id = pathname.split('/').pop()!;
     const deleted = await db.users.delete(id);
     return { success: deleted };
   }
 
   // ==================== AUTH ====================
   
-  if (path === '/api/auth/login' && method === 'POST') {
+  if (pathname === '/api/auth/login' && method === 'POST') {
     const { email, password } = body;
     const user = await db.users.getByEmail(email);
     
@@ -70,7 +72,7 @@ export async function handleApiRequest(path: string, method: string, body?: any)
     };
   }
 
-  if (path === '/api/auth/register' && method === 'POST') {
+  if (pathname === '/api/auth/register' && method === 'POST') {
     const { name, email, password } = body;
     
     // Check if user exists
@@ -102,37 +104,38 @@ export async function handleApiRequest(path: string, method: string, body?: any)
 
   // ==================== REVIEWS ====================
   
-  if (path === '/api/reviews' && method === 'GET') {
-    // Query param: ?productId=sp-001
-    const reviews = await db.reviews.getAll();
+  if (pathname === '/api/reviews' && method === 'GET') {
+    const productId = params.get('product_id') || params.get('productId') || undefined;
+    const reviews = await db.reviews.getAll(productId);
     return { success: true, data: reviews };
   }
 
-  if (path === '/api/reviews' && method === 'POST') {
+  if (pathname === '/api/reviews' && method === 'POST') {
     const review = await db.reviews.create(body);
     return { success: true, data: review };
   }
 
-  if (path.startsWith('/api/reviews/') && method === 'DELETE') {
-    const id = path.split('/').pop()!;
+  if (pathname.startsWith('/api/reviews/') && method === 'DELETE') {
+    const id = pathname.split('/').pop()!;
     const deleted = await db.reviews.delete(id);
     return { success: deleted };
   }
 
   // ==================== ORDERS ====================
   
-  if (path === '/api/orders' && method === 'GET') {
-    const orders = await db.orders.getAll();
+  if (pathname === '/api/orders' && method === 'GET') {
+    const userId = params.get('user_id') || params.get('userId') || undefined;
+    const orders = await db.orders.getAll(userId);
     return { success: true, data: orders };
   }
 
-  if (path === '/api/orders' && method === 'POST') {
+  if (pathname === '/api/orders' && method === 'POST') {
     const order = await db.orders.create(body);
     return { success: true, data: order };
   }
 
-  if (path.startsWith('/api/orders/') && method === 'PUT') {
-    const id = path.split('/').pop()!;
+  if (pathname.startsWith('/api/orders/') && method === 'PUT') {
+    const id = pathname.split('/').pop()!;
     const { status } = body;
     const order = await db.orders.updateStatus(id, status);
     if (!order) {
@@ -143,18 +146,18 @@ export async function handleApiRequest(path: string, method: string, body?: any)
 
   // ==================== CONTACT MESSAGES ====================
   
-  if (path === '/api/messages' && method === 'GET') {
+  if (pathname === '/api/messages' && method === 'GET') {
     const messages = await db.messages.getAll();
     return { success: true, data: messages };
   }
 
-  if (path === '/api/messages' && method === 'POST') {
+  if (pathname === '/api/messages' && method === 'POST') {
     const message = await db.messages.create(body);
     return { success: true, data: message };
   }
 
-  if (path.startsWith('/api/messages/') && method === 'PUT') {
-    const id = path.split('/').pop()!;
+  if (pathname.startsWith('/api/messages/') && method === 'PUT') {
+    const id = pathname.split('/').pop()!;
     const { status } = body;
     const message = await db.messages.updateStatus(id, status);
     if (!message) {
@@ -165,7 +168,7 @@ export async function handleApiRequest(path: string, method: string, body?: any)
 
   // ==================== STATS ====================
   
-  if (path === '/api/stats' && method === 'GET') {
+  if (pathname === '/api/stats' && method === 'GET') {
     const stats = await db.stats();
     return { success: true, data: stats };
   }

@@ -4,6 +4,20 @@ interface Env {
 
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env, params } = context;
+
+  // Xử lý nhanh CORS preflight request tại Edge
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Max-Age': '86400',
+      },
+    });
+  }
+
   const backendBaseUrl = env.BACKEND_API_URL || 'http://localhost:3001';
 
   const pathParts = params.path;
@@ -13,6 +27,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   try {
     const forwardHeaders = new Headers(request.headers);
+    // Xóa host header gốc để tránh lỗi router/SSL handshake của upstream hosting
+    forwardHeaders.delete('host');
     forwardHeaders.set('X-Forwarded-Host', url.host);
     forwardHeaders.set('X-Forwarded-Proto', url.protocol.replace(':', ''));
 
@@ -45,6 +61,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         },
       }
     );

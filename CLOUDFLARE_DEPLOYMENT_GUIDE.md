@@ -6,10 +6,9 @@ Dự án đã được cấu hình hoàn chỉnh để chạy trên mạng lư�
 
 ## 1. Cấu hình có sẵn trong dự án
 
-1. **`wrangler.toml`**: File cấu hình Cloudflare chính thức cho dự án (`voltor-website`).
-2. **`public/_redirects`**: Định tuyến SPA React Router (`/* /index.html 200`) chống lỗi 404 khi người dùng truy cập trực tiếp các route con (`/products`, `/about`, `/admin`...).
-3. **`public/_headers`**: Thiết lập bảo mật HTTP (X-Frame-Options, NoSniff, HSTS) và tối ưu hóa bộ nhớ đệm (Cache-Control) trên Cloudflare Edge.
-4. **`functions/api/`**: Cloudflare Pages Functions xử lý API tại rìa mạng lưới (Edge), tích hợp sẵn reverse proxy tới Backend / Neon PostgreSQL.
+1. **`wrangler.toml`**: File cấu hình Cloudflare chính thức cho dự án (`voltor-website`). Quản lý routing SPA tự động qua `not_found_handling = "single-page-application"`.
+2. **`public/_headers`**: Thiết lập bảo mật HTTP (X-Frame-Options, NoSniff, HSTS) và tối ưu hóa bộ nhớ đệm (Cache-Control) trên Cloudflare Edge.
+3. **`functions/api/`**: Cloudflare Pages Functions xử lý API tại rìa mạng lưới (Edge), tích hợp sẵn reverse proxy tới Backend / Neon PostgreSQL.
 
 ---
 

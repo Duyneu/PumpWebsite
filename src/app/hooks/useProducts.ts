@@ -30,4 +30,7 @@ export function useProducts(): Product[] {
 
 export function invalidateProductsCache(): void {
   cachedProducts = getEffectiveProducts();
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('voltor_products_changed'));
+  }
 }
