@@ -227,6 +227,88 @@ export function saveProduct(product: Product, isEdit = false): void {
 }
 
 /**
+ * Bulk updates multiple products across a column (brand, category, price, etc.)
+ */
+export function batchUpdateProducts(ids: (string | number)[], updates: Partial<Product>): void {
+  const strIds = ids.map(String);
+  try {
+    const updatedRaw = localStorage.getItem(STORAGE_KEYS.UPDATED);
+    const updatedMap: Record<string, Product> = updatedRaw ? JSON.parse(updatedRaw) : {};
+
+    const all = getEffectiveProducts();
+    for (const strId of strIds) {
+      const existing = all.find(p => String(p.id) === strId);
+      if (existing) {
+        updatedMap[strId] = { ...existing, ...updates };
+      }
+    }
+    localStorage.setItem(STORAGE_KEYS.UPDATED, JSON.stringify(updatedMap));
+
+    // Update memory cache
+    if (d1ProductsCache) {
+      d1ProductsCache = d1ProductsCache.map(p => {
+        if (strIds.includes(String(p.id))) {
+          return { ...p, ...updates };
+        }
+        return p;
+      });
+      try {
+        localStorage.setItem(STORAGE_KEYS.D1_CACHE, JSON.stringify(d1ProductsCache));
+      } catch {}
+    }
+
+    // Trigger reactivity
+    window.dispatchEvent(new CustomEvent('voltor_products_changed', { detail: { action: 'batch-update', ids: strIds, updates } }));
+
+    // Send batch update to Cloudflare D1
+    fetch('/api/products/batch-update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: strIds, updates }),
+    }).catch(err => console.warn('[D1 Sync] Batch update failed:', err));
+  } catch (err) {
+    console.error('Error in batchUpdateProducts:', err);
+  }
+}
+
+/**
+ * Bulk deletes multiple products by IDs.
+ */
+export function batchDeleteProducts(ids: (string | number)[]): void {
+  const strIds = ids.map(String);
+  try {
+    const deletedRaw = localStorage.getItem(STORAGE_KEYS.DELETED);
+    const deletedIds: string[] = deletedRaw ? JSON.parse(deletedRaw).map(String) : [];
+    for (const strId of strIds) {
+      if (!deletedIds.includes(strId)) {
+        deletedIds.push(strId);
+      }
+    }
+    localStorage.setItem(STORAGE_KEYS.DELETED, JSON.stringify(deletedIds));
+
+    // Update memory cache
+    if (d1ProductsCache) {
+      d1ProductsCache = d1ProductsCache.filter(p => !strIds.includes(String(p.id)));
+      try {
+        localStorage.setItem(STORAGE_KEYS.D1_CACHE, JSON.stringify(d1ProductsCache));
+      } catch {}
+    }
+
+    // Trigger reactivity
+    window.dispatchEvent(new CustomEvent('voltor_products_changed', { detail: { action: 'batch-delete', ids: strIds } }));
+
+    // Send batch delete to Cloudflare D1
+    fetch('/api/products/batch-delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: strIds }),
+    }).catch(err => console.warn('[D1 Sync] Batch delete failed:', err));
+  } catch (err) {
+    console.error('Error in batchDeleteProducts:', err);
+  }
+}
+
+/**
  * Gets a single product by ID.
  */
 export function getProductById(id: string | number): Product | undefined {

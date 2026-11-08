@@ -128,6 +128,47 @@ export default {
           });
         }
 
+        if (path === 'products/batch-update' && method === 'POST') {
+          const { ids, updates }: any = await request.json();
+          if (!Array.isArray(ids) || ids.length === 0 || !updates) {
+            return jsonResponse({ success: false, error: 'Invalid payload' }, 400);
+          }
+
+          const stmts = [];
+          for (const id of ids) {
+            const fields: string[] = [];
+            const values: any[] = [];
+
+            if (updates.brand !== undefined) { fields.push('brand = ?'); values.push(updates.brand); }
+            if (updates.category !== undefined) { fields.push('category = ?'); values.push(updates.category); }
+            if (updates.price !== undefined) { fields.push('price = ?'); values.push(Number(updates.price)); }
+            if (updates.warranty !== undefined) { fields.push('warranty = ?'); values.push(updates.warranty); }
+            if (updates.origin !== undefined) { fields.push('origin = ?'); values.push(updates.origin); }
+            if (updates.inStock !== undefined) { fields.push('stock_quantity = ?'); values.push(updates.inStock ? 100 : 0); }
+
+            if (fields.length > 0) {
+              values.push(id);
+              stmts.push(db.prepare(`UPDATE products SET ${fields.join(', ')} WHERE id = ?`).bind(...values));
+            }
+          }
+
+          if (stmts.length > 0) {
+            await db.batch(stmts);
+          }
+
+          return jsonResponse({ success: true, count: ids.length });
+        }
+
+        if (path === 'products/batch-delete' && method === 'POST') {
+          const { ids }: any = await request.json();
+          if (!Array.isArray(ids) || ids.length === 0) {
+            return jsonResponse({ success: false, error: 'Invalid payload' }, 400);
+          }
+          const stmts = ids.map((id: string) => db.prepare('DELETE FROM products WHERE id = ?').bind(id));
+          await db.batch(stmts);
+          return jsonResponse({ success: true, count: ids.length });
+        }
+
         if (path.startsWith('products/') && (method === 'PUT' || method === 'PATCH')) {
           const id = path.split('/')[1];
           const body: any = await request.json();
