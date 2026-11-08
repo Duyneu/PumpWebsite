@@ -1,0 +1,12 @@
+name = "voltor-website"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare Workers / Pages Static Assets configuration
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
+html_handling = "auto-trailing-slash"
+
+[vars]
+NODE_ENV = "production"
