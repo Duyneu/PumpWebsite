@@ -14,7 +14,8 @@ import {
   Upload,
   FolderOpen,
   Plus,
-  Trash2
+  Trash2,
+  ClipboardPaste
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -92,6 +93,71 @@ export function AdminProductFormPage() {
 
   const [saving, setSaving] = useState(false);
   const [customSpecs, setCustomSpecs] = useState<Array<{ name: string; value: string }>>([]);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Xử lý nạp file ảnh (từ upload, drag-drop hoặc paste clipboard)
+  const handleImageFile = (file: File, sourceName = 'tải lên') => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Tập tin không phải định dạng hình ảnh hợp lệ!');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Kích thước ảnh tối đa là 5MB!');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setFormData(prev => ({ ...prev, image: base64 }));
+      toast.success(`Đã nhận ảnh (${sourceName}) thành công!`);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Nút dán trực tiếp từ bộ nhớ tạm
+  const handlePasteFromClipboard = async () => {
+    try {
+      if (navigator.clipboard?.read) {
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+          const imageType = item.types.find(t => t.startsWith('image/'));
+          if (imageType) {
+            const blob = await item.getType(imageType);
+            const file = new File([blob], 'clipboard-image.png', { type: imageType });
+            handleImageFile(file, 'Clipboard');
+            return;
+          }
+        }
+      }
+      toast.info('Nhấn phím Ctrl + V (hoặc Cmd + V) để dán ảnh trực tiếp.');
+    } catch {
+      toast.info('Nhấn phím Ctrl + V (hoặc Cmd + V) để dán ảnh trực tiếp.');
+    }
+  };
+
+  // Lắng nghe phím tắt Ctrl + V toàn trang khi người dùng paste ảnh
+  useEffect(() => {
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      // Nếu đang gõ text trong input khác thì bỏ qua trừ khi là ảnh
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            handleImageFile(file, 'Dán Ctrl + V');
+            return;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handleGlobalPaste);
+    return () => window.removeEventListener('paste', handleGlobalPaste);
+  }, []);
 
   // Danh mục phẳng lấy từ mainCategories
   const allSubcategories = mainCategories.flatMap(c => c.subcategories || [c.name]);
@@ -567,41 +633,58 @@ export function AdminProductFormPage() {
             </div>
 
             <div className="space-y-5">
-              {/* File upload drag & drop box */}
+              {/* File upload drag & drop & paste box */}
               <div>
-                <Label className="text-sm font-semibold text-gray-700 block mb-2">
-                  Tải ảnh từ máy tính (Không cần URL)
-                </Label>
-                <div className="border-2 border-dashed border-gray-300 hover:border-blue-500 rounded-2xl p-6 text-center bg-gray-50/50 hover:bg-blue-50/30 transition-all cursor-pointer relative group">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-sm font-semibold text-gray-700">
+                    Tải ảnh hoặc Dán trực tiếp (Copy - Paste)
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePasteFromClipboard}
+                    className="h-7 text-xs gap-1.5 text-purple-700 border-purple-200 bg-purple-50/60 hover:bg-purple-100 font-semibold"
+                  >
+                    <ClipboardPaste className="w-3.5 h-3.5" /> Dán ảnh Clipboard (Ctrl + V)
+                  </Button>
+                </div>
+
+                <div 
+                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) handleImageFile(file, 'Kéo thả');
+                  }}
+                  className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer relative group ${
+                    isDragging 
+                      ? 'border-purple-500 bg-purple-50/50 scale-[1.01]' 
+                      : 'border-gray-300 hover:border-purple-500 bg-gray-50/50 hover:bg-purple-50/30'
+                  }`}
+                >
                   <input
                     type="file"
                     accept="image/*"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) {
-                        if (file.size > 5 * 1024 * 1024) {
-                          toast.error('Kích thước ảnh tối đa là 5MB!');
-                          return;
-                        }
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          const base64 = event.target?.result as string;
-                          setFormData(prev => ({ ...prev, image: base64 }));
-                          toast.success('Đã tải ảnh lên thành công!');
-                        };
-                        reader.readAsDataURL(file);
-                      }
+                      if (file) handleImageFile(file, 'Tải từ máy tính');
                     }}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    title="Bấm để chọn file hoặc dán ảnh (Ctrl+V)"
                   />
-                  <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                  <div className="flex flex-col items-center pointer-events-none">
+                    <div className="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                       <Upload className="w-6 h-6" />
                     </div>
-                    <p className="text-sm font-medium text-gray-700">
-                      Bấm vào đây để chọn ảnh từ máy tính hoặc kéo thả ảnh vào
+                    <p className="text-sm font-medium text-gray-800">
+                      Bấm để chọn ảnh, kéo thả file, hoặc <span className="text-purple-600 font-bold underline">nhấn Ctrl + V để dán ảnh vừa copy</span>
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">Hỗ trợ JPG, PNG, WEBP tối đa 5MB</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Hỗ trợ chụp màn hình (Snipping Tool, PrintScreen) dán trực tiếp • JPG, PNG, WEBP (tối đa 5MB)
+                    </p>
                   </div>
                 </div>
               </div>
