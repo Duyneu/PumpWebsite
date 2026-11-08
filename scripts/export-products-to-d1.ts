@@ -35,8 +35,12 @@ lines.push(`INSERT OR IGNORE INTO categories (id, name, slug, level, description
 (9, 'Máy Bơm Giếng Khoan', 'may-bom-gieng-khoan', 2, 'Máy bơm giếng khoan sâu', 'Drill', 6);`);
 lines.push('');
 
-// 2. Products
+// 2. Products (Exclude 23 obsolete base products '1'..'23', only keep 120 Dongyin products)
+const EXCLUDED_IDS = new Set(Array.from({ length: 23 }, (_, i) => String(i + 1)));
+
 for (const p of products) {
+  if (EXCLUDED_IDS.has(String(p.id))) continue;
+
   const id = p.id;
   const name = p.name;
   const slug = slugify(p.name) + '-' + id;
