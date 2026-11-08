@@ -3,6 +3,12 @@ export interface Product {
   name: string;
   category: string;
   price: number;
+  original_price?: number;
+  brand?: string;
+  sku?: string;
+  model?: string;
+  origin?: string;
+  warranty?: string;
   image: string;
   description: string;
   specs?: {

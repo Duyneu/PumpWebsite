@@ -70,11 +70,11 @@ export function AdminProductsPage() {
     return rawProducts.map((p) => ({
       id: p.id,
       name: p.name,
-      sku: String(p.id),
+      sku: p.sku || String(p.id),
       price: p.price || 0,
       stock: p.inStock ? 25 : 0,
       category: p.category || 'Máy bơm',
-      brand: p.name.includes('DONGYIN') ? 'DONGYIN' : 'VOLTOR',
+      brand: p.brand || (p.name.includes('DONGYIN') ? 'DONGYIN' : 'VOLTOR'),
       is_featured: false,
       is_bestseller: false,
       is_new: false,

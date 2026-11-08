@@ -47,8 +47,15 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const formatted = (results || []).map((p: any) => ({
           id: p.id,
           name: p.name,
+          slug: p.slug,
+          sku: p.sku || `SKU-${p.id}`,
           category: p.category || 'Máy Bơm Nước',
+          brand: p.brand || 'VOLTOR',
+          model: p.model || '',
+          origin: p.origin || 'Việt Nam',
+          warranty: p.warranty || '12 tháng',
           price: p.price,
+          original_price: p.original_price,
           image: p.image_url,
           description: p.description,
           specs: p.specifications ? JSON.parse(p.specifications) : {},
@@ -66,8 +73,15 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           data: {
             id: product.id,
             name: product.name,
+            slug: product.slug,
+            sku: product.sku || `SKU-${product.id}`,
             category: product.category || 'Máy Bơm Nước',
+            brand: product.brand || 'VOLTOR',
+            model: product.model || '',
+            origin: product.origin || 'Việt Nam',
+            warranty: product.warranty || '12 tháng',
             price: product.price,
+            original_price: product.original_price,
             image: product.image_url,
             description: product.description,
             specs: product.specifications ? JSON.parse(product.specifications) : {},
@@ -87,7 +101,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const originalPrice = body.original_price ? Number(body.original_price) : null;
         const brand = body.brand || 'VOLTOR';
         const model = body.model || body.name || '';
-        const origin = body.origin || 'Việt Nam / Trung Quốc';
+        const origin = body.origin || 'Việt Nam';
         const warranty = body.warranty || '12 tháng';
         const status = body.status || (body.inStock !== false ? 'active' : 'inactive');
         const stock = body.inStock !== false ? 100 : 0;
@@ -105,7 +119,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         return jsonResponse({
           success: true,
-          data: { id, name, category, price, image, description, specs: body.specs, inStock: stock > 0 },
+          data: { id, name, category, brand, model, origin, warranty, price, original_price: originalPrice, image, description, specs: body.specs, inStock: stock > 0 },
         });
       }
 
@@ -120,7 +134,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         const updatedName = body.name ?? existing.name;
         const updatedCat = body.category ?? existing.category;
+        const updatedBrand = body.brand ?? existing.brand;
+        const updatedModel = body.model ?? existing.model;
+        const updatedOrigin = body.origin ?? existing.origin;
+        const updatedWarranty = body.warranty ?? existing.warranty;
+        const updatedSku = body.sku ?? existing.sku;
         const updatedPrice = body.price !== undefined ? Number(body.price) : existing.price;
+        const updatedOrigPrice = body.original_price !== undefined ? (body.original_price ? Number(body.original_price) : null) : existing.original_price;
         const updatedImg = (body.image || body.image_url) ?? existing.image_url;
         const updatedDesc = body.description ?? existing.description;
         const updatedSpecs = body.specs ? JSON.stringify(body.specs) : existing.specifications;
@@ -128,13 +148,27 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         await db.prepare(`
           UPDATE products SET
-            name = ?, category = ?, price = ?, image_url = ?, description = ?, specifications = ?, stock_quantity = ?
+            name = ?, category = ?, brand = ?, model = ?, origin = ?, warranty = ?, sku = ?, price = ?, original_price = ?, image_url = ?, description = ?, specifications = ?, stock_quantity = ?
           WHERE id = ?
-        `).bind(updatedName, updatedCat, updatedPrice, updatedImg, updatedDesc, updatedSpecs, updatedStock, id).run();
+        `).bind(updatedName, updatedCat, updatedBrand, updatedModel, updatedOrigin, updatedWarranty, updatedSku, updatedPrice, updatedOrigPrice, updatedImg, updatedDesc, updatedSpecs, updatedStock, id).run();
 
         return jsonResponse({
           success: true,
-          data: { id, name: updatedName, category: updatedCat, price: updatedPrice, image: updatedImg, description: updatedDesc, inStock: updatedStock > 0 },
+          data: { 
+            id, 
+            name: updatedName, 
+            category: updatedCat, 
+            brand: updatedBrand, 
+            model: updatedModel, 
+            origin: updatedOrigin, 
+            warranty: updatedWarranty, 
+            sku: updatedSku, 
+            price: updatedPrice, 
+            original_price: updatedOrigPrice, 
+            image: updatedImg, 
+            description: updatedDesc, 
+            inStock: updatedStock > 0 
+          },
         });
       }
 
