@@ -50,7 +50,12 @@ export default {
         if (path === 'products' && method === 'GET') {
           const { results } = await db.prepare('SELECT * FROM products ORDER BY created_at DESC').all();
           const formatted = (results || []).map((p: any) => ({
-            ...p,
+            id: p.id,
+            name: p.name,
+            category: p.category || 'Máy Bơm Nước',
+            price: p.price,
+            image: p.image_url,
+            description: p.description,
             specs: p.specifications ? JSON.parse(p.specifications) : {},
             inStock: p.stock_quantity > 0,
           }));
@@ -64,11 +69,84 @@ export default {
           return jsonResponse({
             success: true,
             data: {
-              ...product,
+              id: product.id,
+              name: product.name,
+              category: product.category || 'Máy Bơm Nước',
+              price: product.price,
+              image: product.image_url,
+              description: product.description,
               specs: product.specifications ? JSON.parse(product.specifications) : {},
               inStock: product.stock_quantity > 0,
             },
           });
+        }
+
+        if (path === 'products' && method === 'POST') {
+          const body: any = await request.json();
+          const id = String(body.id || 'sp_' + Date.now());
+          const name = body.name || 'Sản phẩm mới';
+          const slug = body.slug || id;
+          const sku = body.sku || `SKU-${id}`;
+          const category = body.category || 'Máy Bơm Nước';
+          const price = Number(body.price) || 0;
+          const originalPrice = body.original_price ? Number(body.original_price) : null;
+          const brand = body.brand || 'VOLTOR';
+          const model = body.model || body.name || '';
+          const origin = body.origin || 'Việt Nam / Trung Quốc';
+          const warranty = body.warranty || '12 tháng';
+          const status = body.status || (body.inStock !== false ? 'active' : 'inactive');
+          const stock = body.inStock !== false ? 100 : 0;
+          const image = body.image || body.image_url || '';
+          const description = body.description || '';
+          const specs = body.specs ? JSON.stringify(body.specs) : null;
+
+          await db.prepare(`
+            INSERT OR REPLACE INTO products (
+              id, name, slug, sku, category, price, original_price, brand, model, origin, warranty, status, stock_quantity, image_url, description, specifications
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(
+            id, name, slug, sku, category, price, originalPrice, brand, model, origin, warranty, status, stock, image, description, specs
+          ).run();
+
+          return jsonResponse({
+            success: true,
+            data: { id, name, category, price, image, description, specs: body.specs, inStock: stock > 0 },
+          });
+        }
+
+        if (path.startsWith('products/') && (method === 'PUT' || method === 'PATCH')) {
+          const id = path.split('/')[1];
+          const body: any = await request.json();
+          const existing: any = await db.prepare('SELECT * FROM products WHERE id = ?').bind(id).first();
+
+          if (!existing) {
+            return jsonResponse({ success: false, error: 'Product not found' }, 404);
+          }
+
+          const updatedName = body.name ?? existing.name;
+          const updatedCat = body.category ?? existing.category;
+          const updatedPrice = body.price !== undefined ? Number(body.price) : existing.price;
+          const updatedImg = (body.image || body.image_url) ?? existing.image_url;
+          const updatedDesc = body.description ?? existing.description;
+          const updatedSpecs = body.specs ? JSON.stringify(body.specs) : existing.specifications;
+          const updatedStock = body.inStock !== undefined ? (body.inStock ? 100 : 0) : existing.stock_quantity;
+
+          await db.prepare(`
+            UPDATE products SET
+              name = ?, category = ?, price = ?, image_url = ?, description = ?, specifications = ?, stock_quantity = ?
+            WHERE id = ?
+          `).bind(updatedName, updatedCat, updatedPrice, updatedImg, updatedDesc, updatedSpecs, updatedStock, id).run();
+
+          return jsonResponse({
+            success: true,
+            data: { id, name: updatedName, category: updatedCat, price: updatedPrice, image: updatedImg, description: updatedDesc, inStock: updatedStock > 0 },
+          });
+        }
+
+        if (path.startsWith('products/') && method === 'DELETE') {
+          const id = path.split('/')[1];
+          await db.prepare('DELETE FROM products WHERE id = ?').bind(id).run();
+          return jsonResponse({ success: true, message: `Deleted product ${id}` });
         }
 
         // ==================== REVIEWS ====================

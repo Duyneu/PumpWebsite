@@ -1,10 +1,15 @@
 import { useSyncExternalStore } from 'react';
-import { getEffectiveProducts } from '../utils/productStorage';
+import { getEffectiveProducts, syncProductsFromD1 } from '../utils/productStorage';
 import { Product } from '../types';
 
 let cachedProducts: Product[] | null = null;
+let initializedSync = false;
 
 function getCachedProducts(): Product[] {
+  if (!initializedSync && typeof window !== 'undefined') {
+    initializedSync = true;
+    syncProductsFromD1();
+  }
   if (!cachedProducts) {
     cachedProducts = getEffectiveProducts();
   }

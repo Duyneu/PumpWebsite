@@ -5,7 +5,41 @@ const STORAGE_KEYS = {
   CUSTOM: 'custom_products',
   DELETED: 'deleted_product_ids',
   UPDATED: 'updated_products',
+  D1_CACHE: 'voltor_d1_products',
 };
+
+// 23 legacy mock IDs to exclude
+const LEGACY_EXCLUDED_IDS = new Set(Array.from({ length: 23 }, (_, i) => String(i + 1)));
+
+let d1ProductsCache: Product[] | null = null;
+let isSyncing = false;
+
+/**
+ * Syncs the latest product catalog from Cloudflare D1 Database.
+ */
+export async function syncProductsFromD1(): Promise<Product[] | null> {
+  if (isSyncing) return d1ProductsCache;
+  isSyncing = true;
+  try {
+    const res = await fetch('/api/products');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        d1ProductsCache = data.data;
+        try {
+          localStorage.setItem(STORAGE_KEYS.D1_CACHE, JSON.stringify(data.data));
+        } catch {}
+        window.dispatchEvent(new CustomEvent('voltor_products_changed'));
+        return d1ProductsCache;
+      }
+    }
+  } catch (err) {
+    // Offline or static fallback
+  } finally {
+    isSyncing = false;
+  }
+  return null;
+}
 
 /**
  * Returns all active products combining initial products + custom created products,
@@ -25,12 +59,24 @@ export function getEffectiveProducts(): Product[] {
 
     const deletedRaw = localStorage.getItem(STORAGE_KEYS.DELETED);
     if (deletedRaw) deletedIds = JSON.parse(deletedRaw).map(String);
+
+    if (!d1ProductsCache) {
+      const cached = localStorage.getItem(STORAGE_KEYS.D1_CACHE);
+      if (cached) {
+        d1ProductsCache = JSON.parse(cached);
+      }
+    }
   } catch (err) {
     console.error('Error reading products from localStorage:', err);
   }
 
-  // Combine custom created products first, then base products
-  const combined: Product[] = [...customProducts, ...baseProducts];
+  // Base list: Cloudflare D1 cache if available, else filtered base products
+  const baseCatalog = d1ProductsCache && d1ProductsCache.length > 0
+    ? d1ProductsCache
+    : baseProducts.filter(p => !LEGACY_EXCLUDED_IDS.has(String(p.id)));
+
+  // Combine custom created products first, then base catalog
+  const combined: Product[] = [...customProducts, ...baseCatalog];
 
   // Apply updates & deduplicate by ID
   const productMap = new Map<string, Product>();
@@ -38,7 +84,7 @@ export function getEffectiveProducts(): Product[] {
   for (const item of combined) {
     const id = String(item.id);
     // Skip if deleted
-    if (deletedIds.includes(id)) {
+    if (deletedIds.includes(id) || LEGACY_EXCLUDED_IDS.has(id)) {
       continue;
     }
 
@@ -56,7 +102,7 @@ export function getEffectiveProducts(): Product[] {
 }
 
 /**
- * Permanently deletes a product by ID across all pages.
+ * Permanently deletes a product by ID across all pages and syncs to Cloudflare D1.
  */
 export function deleteProduct(id: string | number): void {
   const strId = String(id);
@@ -86,15 +132,28 @@ export function deleteProduct(id: string | number): void {
       localStorage.setItem(STORAGE_KEYS.UPDATED, JSON.stringify(updated));
     }
 
+    // Update memory cache
+    if (d1ProductsCache) {
+      d1ProductsCache = d1ProductsCache.filter(p => String(p.id) !== strId);
+      try {
+        localStorage.setItem(STORAGE_KEYS.D1_CACHE, JSON.stringify(d1ProductsCache));
+      } catch {}
+    }
+
     // Dispatch global event for instant reactivity
     window.dispatchEvent(new CustomEvent('voltor_products_changed', { detail: { action: 'delete', id: strId } }));
+
+    // 4. Background Sync to Cloudflare D1
+    fetch(`/api/products/${encodeURIComponent(strId)}`, {
+      method: 'DELETE',
+    }).catch(err => console.warn('[D1 Sync] Failed to delete product from Cloudflare D1:', err));
   } catch (err) {
     console.error('Error deleting product from localStorage:', err);
   }
 }
 
 /**
- * Saves a new product or updates an existing one.
+ * Saves a new product or updates an existing one and syncs to Cloudflare D1.
  */
 export function saveProduct(product: Product, isEdit = false): void {
   const strId = String(product.id);
@@ -133,14 +192,35 @@ export function saveProduct(product: Product, isEdit = false): void {
       // New product: add to custom_products
       const customRaw = localStorage.getItem(STORAGE_KEYS.CUSTOM);
       const custom: Product[] = customRaw ? JSON.parse(customRaw) : [];
-      // Remove any duplicate if exists then unshift
       const filtered = custom.filter(p => String(p.id) !== strId);
       filtered.unshift(product);
       localStorage.setItem(STORAGE_KEYS.CUSTOM, JSON.stringify(filtered));
     }
 
+    // Update memory cache
+    if (d1ProductsCache) {
+      const idx = d1ProductsCache.findIndex(p => String(p.id) === strId);
+      if (idx >= 0) {
+        d1ProductsCache[idx] = product;
+      } else {
+        d1ProductsCache.unshift(product);
+      }
+      try {
+        localStorage.setItem(STORAGE_KEYS.D1_CACHE, JSON.stringify(d1ProductsCache));
+      } catch {}
+    }
+
     // Dispatch global event for instant reactivity
     window.dispatchEvent(new CustomEvent('voltor_products_changed', { detail: { action: isEdit ? 'update' : 'create', product } }));
+
+    // 4. Background Sync to Cloudflare D1
+    const method = isEdit ? 'PUT' : 'POST';
+    const endpoint = isEdit ? `/api/products/${encodeURIComponent(strId)}` : '/api/products';
+    fetch(endpoint, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(product),
+    }).catch(err => console.warn('[D1 Sync] Failed to save product to Cloudflare D1:', err));
   } catch (err) {
     console.error('Error saving product to localStorage:', err);
   }
