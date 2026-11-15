@@ -29,3 +29,6 @@ dist-ssr
 .env.*
 !.env.example
 .neon
+
+# Local Documentation (Excluded from Git)
+docs/
