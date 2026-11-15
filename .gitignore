@@ -32,3 +32,4 @@ dist-ssr
 
 # Local Documentation (Excluded from Git)
 docs/
+scripts/generate_docx_report.py
